@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:padding="10dp"
+    android:layout_height="match_parent">
+
+    Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Switch"
+        android:layout_below="@+id/textView_title"
+        android:id="@+id/switch1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Filter Tasks"
+        android:gravity="center"
+        android:layout_marginBottom="7dp"
+        android:id="@+id/textView_title"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/textView"
+        android:layout_alignStart="@+id/textView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Priority"
+        android:id="@+id/textView"
+        android:layout_below="@+id/textView_title"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Date"
+        android:id="@+id/textView2"
+        android:layout_alignTop="@+id/date_new"
+        android:layout_alignLeft="@+id/textView"
+        android:layout_alignStart="@+id/textView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Tasks"
+        android:id="@+id/textView4"
+        android:layout_alignTop="@+id/task_new"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="High"
+        android:id="@+id/priority_high"
+        android:checked="false"
+        android:layout_below="@+id/textView_title"
+        android:layout_toRightOf="@+id/textView"
+        android:layout_toEndOf="@+id/textView"
+        android:layout_marginLeft="37dp"
+        android:layout_marginStart="37dp" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Low"
+        android:id="@+id/priority_low"
+        android:checked="false"
+        android:layout_alignTop="@+id/priority_high"
+        android:layout_toRightOf="@+id/date_new"
+        android:layout_toEndOf="@+id/date_new" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New"
+        android:layout_marginTop="10dp"
+        android:id="@+id/date_new"
+        android:checked="false"
+        android:layout_below="@+id/priority_high"
+        android:layout_alignLeft="@+id/priority_high"
+        android:layout_alignStart="@+id/priority_high" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Old"
+        android:id="@+id/date_old"
+        android:checked="false"
+        android:layout_alignTop="@+id/date_new"
+        android:layout_toRightOf="@+id/date_new"
+        android:layout_toEndOf="@+id/date_new" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New"
+        android:layout_marginTop="20dp"
+        android:id="@+id/task_new"
+        android:checked="false"
+        android:layout_below="@+id/date_new"
+        android:layout_alignLeft="@+id/date_new"
+        android:layout_alignStart="@+id/date_new" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rejected"
+        android:id="@+id/task_rejected"
+        android:checked="false"
+        android:layout_alignTop="@+id/task_new"
+        android:layout_toRightOf="@+id/task_new"
+        android:layout_toEndOf="@+id/task_new" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Apply"
+        android:layout_marginTop="20dp"
+        android:id="@+id/filter_apply_btn"
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Switch"
+        android:id="@+id/switch2"
+        android:layout_below="@+id/switch1"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>

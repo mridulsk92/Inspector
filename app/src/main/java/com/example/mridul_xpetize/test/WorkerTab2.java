@@ -224,88 +224,6 @@ public class WorkerTab2 extends Fragment {
         endDate.setText(sdf.format(myCalendarE.getTime()));
     }
 
-//    private void AddTask() {
-//
-//        final List<String> attachments = new ArrayList<String>();
-//        final String attch = "";
-//
-//        LayoutInflater factory = LayoutInflater.from(getActivity());
-//        final View addView = factory.inflate(
-//                R.layout.addtask_dialog, null);
-//        final AlertDialog addDialog = new AlertDialog.Builder(getActivity()).create();
-//        addDialog.setView(addView);
-//        addDialog.show();
-//
-//        //Initialize
-//        final EditText editDescription = (EditText) addView.findViewById(R.id.editText_desc);
-//        final EditText loc = (EditText) addView.findViewById(R.id.editText_location);
-//        Button add = (Button)addView.findViewById(R.id.button_add);
-//        final CheckBox image = (CheckBox)addView.findViewById(R.id.checkBox_image);
-//        final CheckBox audio = (CheckBox)addView.findViewById(R.id.checkBox_audio);
-//        final CheckBox video = (CheckBox)addView.findViewById(R.id.checkBox_video);
-//
-//        image.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                if(image.isChecked()){
-//                    attachments.add("Image");
-//                }
-//            }
-//        });
-//
-//        audio.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                if(audio.isChecked()){
-//
-//                    attachments.add("Audio");
-//                }
-//            }
-//        });
-//
-//        video.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                if(video.isChecked()){
-//                    attachments.add("Video");
-//                }
-//            }
-//        });
-//
-//        add.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                String listString = "";
-//                empty.setVisibility(View.GONE);
-//
-//                for (String s : attachments)
-//                {
-//                    listString += s + "\t";
-//                }
-//
-//                HashMap<String, String> temp = new HashMap<String, String>();
-//                temp.put(TAG_DESCRIPTION, "Description : " + editDescription.getText().toString());
-//                temp.put(TAG_ATTACHMENT, "Attachments : " + listString);
-//                temp.put(TAG_LOCATION, "Location : " + loc.getText().toString());
-//                dataList.add(temp);
-//
-//                ListAdapter adapter = new SimpleAdapter(
-//                        getActivity(), dataList,
-//                        R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_LOCATION,
-//                        TAG_ATTACHMENT}, new int[]{R.id.desc,
-//                        R.id.location, R.id.attachments});
-//
-//                task_list.setAdapter(adapter);
-//                addDialog.dismiss();
-//
-//            }
-//        });
-//    }
-
     private class PostTasks extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -409,7 +327,6 @@ public class WorkerTab2 extends Fragment {
                         contact.put(TAG_ENDDATE, "End Date : " + end_date);
                         contact.put(TAG_PRIORITY, "Priority : " + priority_string);
                         dataList.add(contact);
-                        empty.setVisibility(View.GONE);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -428,6 +345,7 @@ public class WorkerTab2 extends Fragment {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
+            empty.setVisibility(View.GONE);
             ListAdapter adapter = new SimpleAdapter(
                     getActivity(), dataList,
                     R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},

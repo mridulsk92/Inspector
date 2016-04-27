@@ -97,6 +97,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
         subtaskList = (ListView) findViewById(R.id.listView_subtask);
         task_header = (TextView) findViewById(R.id.txt_task_header);
 
+        //Camera onClick Listener
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,6 +107,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
             }
         });
 
+        //ImageView onClick Listener
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,7 +118,6 @@ public class TaskDetailsActivity extends AppCompatActivity {
                     i.putExtra("path", path);
                     i.putExtra("type","path");
                     startActivity(i);
-
 
 //                    File f = new File(path);
 //                    String imageName = f.getName();
@@ -177,9 +178,9 @@ public class TaskDetailsActivity extends AppCompatActivity {
 //
 //            // Making a request to url and getting response
 //            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
-
+//
 //            Log.d("Response: ", "> " + jsonStr);
-
+//
 //            if (jsonStr != null) {
 //                try {
 //                    JSONObject jsonObj = new JSONObject(jsonStr);

@@ -3,26 +3,29 @@ package com.example.mridul_xpetize.test;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +35,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class TabFragment2 extends Fragment {
+public class WorkerListActivity extends AppCompatActivity {
+
+    private Drawer result = null;
 
     ProgressDialog pDialog;
     private static String TAG_INSPECTOR = "insp";
@@ -47,11 +52,50 @@ public class TabFragment2 extends Fragment {
     List<String> savedList = new ArrayList<String>();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_worker_list);
 
-        View view = inflater.inflate(R.layout.fragment_tab_fragment2, container, false);
+        //Toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitleTextColor(Color.WHITE);
+
+        //Side Drawer Header
+        AccountHeader headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.header)
+                .addProfiles(
+                        new ProfileDrawerItem().withName("Inspector1").withEmail("inspector1@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                ).build();
+
+        //Side Drawer contents
+        result = new DrawerBuilder()
+                .withActivity(this)
+                .withAccountHeader(headerResult)
+                .withToolbar(toolbar)
+                .withTranslucentStatusBar(false)
+                .withSelectedItem(-1)
+                .withDisplayBelowStatusBar(true)
+                .addDrawerItems(
+                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                        if(drawerItem != null){
+
+                        }
+                        return false;
+                    }
+                }).build();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
+
         dataList = new ArrayList<HashMap<String, String>>();
-        inspector_list = (ListView) view.findViewById(R.id.listView_workers);
+        inspector_list = (ListView) findViewById(R.id.listView_workers);
 
 //        if (isNetworkAvailable() && !savedList.isEmpty()) {
 //            new GetWorkerList().execute();
@@ -67,25 +111,20 @@ public class TabFragment2 extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 String name = ((TextView) view.findViewById(R.id.inspector)).getText().toString();
-                String worker_id = ((TextView)view.findViewById(R.id.worker_id)).getText().toString();
+                String worker_id = ((TextView) view.findViewById(R.id.worker_id)).getText().toString();
 
-                Intent intent = new Intent(getActivity(), WorkerActivity.class);
+                Intent intent = new Intent(WorkerListActivity.this, WorkerActivity.class);
                 intent.putExtra("name", name);
-                intent.putExtra("id",worker_id);
+                intent.putExtra("id", worker_id);
                 startActivity(intent);
 
-//                Intent i = new Intent(getActivity(), WorkerActivity.class);
-//                i.putExtra("name", name);
-//                startActivity(i);
             }
         });
-
-        return view;
     }
 
     private void GetSavedWorkerList() {
 
-        TinyDB tiny = new TinyDB(getActivity());
+        TinyDB tiny = new TinyDB(WorkerListActivity.this);
         savedList = tiny.getListString("Names");
 
         for (int i = 0; i < savedList.size(); i++) {
@@ -99,7 +138,7 @@ public class TabFragment2 extends Fragment {
         }
 
         ListAdapter adapter = new SimpleAdapter(
-                getActivity(), dataList,
+                WorkerListActivity.this, dataList,
                 R.layout.layout_worker, new String[]{TAG_INSPECTOR}, new int[]{R.id.inspector,
         });
 
@@ -115,7 +154,7 @@ public class TabFragment2 extends Fragment {
             super.onPreExecute();
             // Showing progress dialog
             dataList.clear();
-            pDialog = new ProgressDialog(getActivity());
+            pDialog = new ProgressDialog(WorkerListActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
             pDialog.show();
@@ -156,7 +195,7 @@ public class TabFragment2 extends Fragment {
                         dataList.add(contact);
 
                     }
-                    TinyDB tiny = new TinyDB(getActivity());
+                    TinyDB tiny = new TinyDB(WorkerListActivity.this);
                     tiny.putListString("Names", (ArrayList<String>) dbListName);
 
                 } catch (JSONException e) {
@@ -179,7 +218,7 @@ public class TabFragment2 extends Fragment {
              * Updating parsed JSON data into ListView
              * */
             ListAdapter adapter = new SimpleAdapter(
-                    getActivity(), dataList,
+                    WorkerListActivity.this, dataList,
                     R.layout.layout_worker, new String[]{TAG_INSPECTOR, TAG_ID}, new int[]{R.id.inspector,R.id.worker_id
             });
 
@@ -189,7 +228,7 @@ public class TabFragment2 extends Fragment {
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
-                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                = (ConnectivityManager) WorkerListActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }

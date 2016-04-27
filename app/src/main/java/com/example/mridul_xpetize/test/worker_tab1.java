@@ -34,8 +34,8 @@ public class worker_tab1 extends Fragment {
             public void onClick(View v) {
 
                 Intent i = new Intent(getActivity(),FullImageActivity.class);
-                i.putExtra("image",image_url);
                 i.putExtra("type","url");
+                i.putExtra("image",image_url);
                 startActivity(i);
             }
         });

@@ -32,6 +32,7 @@ import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.SectionDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import org.json.JSONArray;
@@ -94,12 +95,12 @@ public class WorkerActivity extends AppCompatActivity {
         worker_id = i.getStringExtra("id");
 
         //Initialize
-        workerName = (TextView)findViewById(R.id.textView_inspector);
-        task_list = (ListView)findViewById(R.id.listView_task);
+        workerName = (TextView) findViewById(R.id.textView_inspector);
+        task_list = (ListView) findViewById(R.id.listView_task);
         task_list.setEmptyView(findViewById(android.R.id.empty));
         dataList = new ArrayList<HashMap<String, String>>();
-        empty = (TextView)findViewById(R.id.empty);
-        added_list = (ListView)findViewById(R.id.listView_task);
+        empty = (TextView) findViewById(R.id.empty);
+        added_list = (ListView) findViewById(R.id.listView_task);
         workerName.setText(name);
 
         new GetTaskList().execute();
@@ -120,13 +121,20 @@ public class WorkerActivity extends AppCompatActivity {
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
                         new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false),
+                        new SectionDrawerItem().withName("Filter"),
+                        new SecondaryDrawerItem().withName("New Task").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Old Task").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("High Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Medium Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Low Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false)
                 ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         if (drawerItem != null) {
                             if (drawerItem.getIdentifier() == 1) {
+
                             }
                         }
                         return false;

@@ -18,6 +18,7 @@ public class CompletedTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_completed_task);
 
         img = (ImageView)findViewById(R.id.imageView2);
+        //temp image url (to be changed)
         final String image_url = "https://www.google.co.in/images/branding/googleg/1x/googleg_standard_color_128dp.png";
         Picasso.with(CompletedTaskActivity.this)
                 .load(image_url)

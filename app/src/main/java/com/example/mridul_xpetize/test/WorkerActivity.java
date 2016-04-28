@@ -30,6 +30,7 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SectionDrawerItem;
@@ -69,6 +70,10 @@ public class WorkerActivity extends AppCompatActivity {
     ProgressDialog pDialog;
 
     ArrayList<HashMap<String, String>> dataList;
+    ArrayList<HashMap<String, String>> highPriorityList;
+    ArrayList<HashMap<String, String>> mediumPriorityList;
+    ArrayList<HashMap<String, String>> lowPriorityList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +104,9 @@ public class WorkerActivity extends AppCompatActivity {
         task_list = (ListView) findViewById(R.id.listView_task);
         task_list.setEmptyView(findViewById(android.R.id.empty));
         dataList = new ArrayList<HashMap<String, String>>();
+        highPriorityList = new ArrayList<HashMap<String, String>>();
+        mediumPriorityList = new ArrayList<HashMap<String, String>>();
+        lowPriorityList = new ArrayList<HashMap<String, String>>();
         empty = (TextView) findViewById(R.id.empty);
         added_list = (ListView) findViewById(R.id.listView_task);
         workerName.setText(name);
@@ -120,21 +128,55 @@ public class WorkerActivity extends AppCompatActivity {
                 .withSelectedItem(-1)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false),
+                        new PrimaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withIdentifier(1).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withIdentifier(2).withSelectable(false),
                         new SectionDrawerItem().withName("Filter"),
-                        new SecondaryDrawerItem().withName("New Task").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Old Task").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("High Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Medium Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Low Priority").withIcon(getResources().getDrawable(R.drawable.filter_ic)).withSelectable(false)
+//                        new SecondaryDrawerItem().withName("New Task").withIcon(getResources().getDrawable(R.drawable.ic_filter)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("All Task").withIcon(getResources().getDrawable(R.drawable.ic_filter)).withIdentifier(6).withSelectable(false),
+                        new SecondaryDrawerItem().withName("High Priority").withIcon(getResources().getDrawable(R.drawable.ic_filter)).withIdentifier(3).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Medium Priority").withIcon(getResources().getDrawable(R.drawable.ic_filter)).withIdentifier(4).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Low Priority").withIcon(getResources().getDrawable(R.drawable.ic_filter)).withIdentifier(5).withSelectable(false)
                 ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         if (drawerItem != null) {
-                            if (drawerItem.getIdentifier() == 1) {
+                            if (drawerItem.getIdentifier() == 3) {
 
+                                //Load high priority tasks
+                                ListAdapter adapter = new SimpleAdapter(
+                                        WorkerActivity.this, highPriorityList,
+                                        R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+
+                                task_list.setAdapter(adapter);
+                            } else if (drawerItem.getIdentifier() == 4) {
+
+                                //Load Medium priority tasks
+                                ListAdapter adapter = new SimpleAdapter(
+                                        WorkerActivity.this, mediumPriorityList,
+                                        R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+
+                                task_list.setAdapter(adapter);
+                            } else if (drawerItem.getIdentifier() == 5) {
+
+                                //Load low priority tasks
+                                ListAdapter adapter = new SimpleAdapter(
+                                        WorkerActivity.this, lowPriorityList,
+                                        R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+
+                                task_list.setAdapter(adapter);
+                            } else if (drawerItem.getIdentifier() == 6) {
+
+                                //Load all tasks
+                                ListAdapter adapter = new SimpleAdapter(
+                                        WorkerActivity.this, dataList,
+                                        R.layout.layput_tasks, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+
+                                task_list.setAdapter(adapter);
                             }
                         }
                         return false;
@@ -324,6 +366,10 @@ public class WorkerActivity extends AppCompatActivity {
             super.onPreExecute();
             // Showing progress dialog
             dataList.clear();
+            highPriorityList.clear();
+            mediumPriorityList.clear();
+            lowPriorityList.clear();
+
             pDialog = new ProgressDialog(WorkerActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
@@ -359,11 +405,44 @@ public class WorkerActivity extends AppCompatActivity {
                         String priority_string = "High";
 
                         if (priority == 1) {
+
                             priority_string = "High";
+
+                            HashMap<String, String> tempHigh = new HashMap<String, String>();
+
+                            tempHigh.put(TAG_DESCRIPTION, "Description : " + desc);
+                            tempHigh.put(TAG_ID, id);
+                            tempHigh.put(TAG_STARTDATE, "Start Date : " + st_date);
+                            tempHigh.put(TAG_ENDDATE, "End Date : " + end_date);
+                            tempHigh.put(TAG_PRIORITY, "Priority : " + priority_string);
+                            highPriorityList.add(tempHigh);
+
                         } else if (priority == 2) {
+
                             priority_string = "Medium";
+
+                            HashMap<String, String> tempMedium = new HashMap<String, String>();
+
+                            tempMedium.put(TAG_DESCRIPTION, "Description : " + desc);
+                            tempMedium.put(TAG_ID, id);
+                            tempMedium.put(TAG_STARTDATE, "Start Date : " + st_date);
+                            tempMedium.put(TAG_ENDDATE, "End Date : " + end_date);
+                            tempMedium.put(TAG_PRIORITY, "Priority : " + priority_string);
+                            mediumPriorityList.add(tempMedium);
+
                         } else if (priority == 3) {
+
                             priority_string = "Low";
+
+                            HashMap<String, String> tempLow = new HashMap<String, String>();
+
+                            tempLow.put(TAG_DESCRIPTION, "Description : " + desc);
+                            tempLow.put(TAG_ID, id);
+                            tempLow.put(TAG_STARTDATE, "Start Date : " + st_date);
+                            tempLow.put(TAG_ENDDATE, "End Date : " + end_date);
+                            tempLow.put(TAG_PRIORITY, "Priority : " + priority_string);
+                            lowPriorityList.add(tempLow);
+
                         } else {
                             priority_string = "High";
                         }

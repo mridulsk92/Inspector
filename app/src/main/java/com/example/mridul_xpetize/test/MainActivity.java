@@ -283,6 +283,10 @@ public class MainActivity extends AppCompatActivity {
             super.onPreExecute();
             // Showing progress dialog
             dataList.clear();
+            highPriorityList.clear();
+            mediumPriorityList.clear();
+            lowPriorityList.clear();
+
             pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);

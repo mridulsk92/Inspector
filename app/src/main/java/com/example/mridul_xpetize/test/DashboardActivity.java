@@ -10,9 +10,18 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageButton;
 
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+
 public class DashboardActivity extends AppCompatActivity {
 
     ImageButton myTasks, workers, notification, logout;
+    PreferencesHelper pref;
+    private Drawer result = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +33,32 @@ public class DashboardActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setTitle("Inspector");
+
+        pref = new PreferencesHelper(DashboardActivity.this);
+        String name = pref.GetPreferences("Name");
+
+        //Adding Header to the Navigation Drawer
+        AccountHeader headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.header)
+                .addProfiles(
+                        new ProfileDrawerItem().withName(name).withEmail(name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                ).build();
+
+        //Drawer
+        result = new DrawerBuilder()
+                .withActivity(this)
+                .withAccountHeader(headerResult)
+                .withToolbar(toolbar)
+                .withTranslucentStatusBar(false)
+                .withDisplayBelowStatusBar(true)
+                .addDrawerItems(
+                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).build();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Initialise
         myTasks = (ImageButton)findViewById(R.id.imageButton_myTasks);

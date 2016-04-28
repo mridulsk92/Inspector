@@ -90,13 +90,16 @@ public class MainActivity extends AppCompatActivity {
         taskList = new ArrayList<HashMap<String, String>>();
         pref = new PreferencesHelper(MainActivity.this);
 
+        pref = new PreferencesHelper(MainActivity.this);
+        String acc_name = pref.GetPreferences("Name");
+
         //Side Drawer Header
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("Inspector1").withEmail("inspector1@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
+        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile));
 
         //Side Drawer contents
         result = new DrawerBuilder()

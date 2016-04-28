@@ -52,6 +52,7 @@ public class WorkerActivity extends AppCompatActivity {
     ListView task_list;
     TextView empty, workerName;
     ImageButton startCal, endCal;
+    PreferencesHelper pref;
 
     String desc, stdate, enddate, worker_id;
     int priority;
@@ -113,11 +114,15 @@ public class WorkerActivity extends AppCompatActivity {
 
         new GetTaskList().execute();
 
+        pref = new PreferencesHelper(WorkerActivity.this);
+        String acc_name = pref.GetPreferences("Name");
+
+        //Side Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("Inspector1").withEmail("inspector1@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         result = new DrawerBuilder()

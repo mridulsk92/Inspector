@@ -45,20 +45,27 @@ public class TaskActivity extends AppCompatActivity {
     ArrayList<String> selectedStrings = new ArrayList<String>();
     TextView task,status;
     private Drawer result = null;
+    PreferencesHelper pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
 
+        //Initialise toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
+
+        pref = new PreferencesHelper(TaskActivity.this);
+        String name = pref.GetPreferences("Name");
+
+        //Side Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("Inspector1").withEmail("inspector1@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(name).withEmail(name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         result = new DrawerBuilder()

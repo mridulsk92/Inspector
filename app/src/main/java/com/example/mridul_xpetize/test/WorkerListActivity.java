@@ -46,6 +46,7 @@ public class WorkerListActivity extends AppCompatActivity {
     JSONArray workers;
     private static String TAG_NAME = "Name";
     private static String TAG_ID = "Id";
+    PreferencesHelper pref;
 
     List<String> dbListName = new ArrayList<String>();
     List<String> dbListId = new ArrayList<String>();
@@ -61,12 +62,15 @@ public class WorkerListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
 
+        pref = new PreferencesHelper(WorkerListActivity.this);
+        String name = pref.GetPreferences("Name");
+
         //Side Drawer Header
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("Inspector1").withEmail("inspector1@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(name).withEmail(name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         //Side Drawer contents

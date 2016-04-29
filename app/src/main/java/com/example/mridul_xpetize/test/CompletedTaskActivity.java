@@ -17,9 +17,12 @@ public class CompletedTaskActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_completed_task);
 
-        img = (ImageView)findViewById(R.id.imageView2);
+        img = (ImageView) findViewById(R.id.imageView2);
         //temp image url (to be changed)
-        final String image_url = "https://www.google.co.in/images/branding/googleg/1x/googleg_standard_color_128dp.png";
+
+//  final String image_url = "https://www.google.co.in/images/branding/googleg/1x/googleg_standard_color_128dp.png";
+        final String image_url = "http://assets.njspotlight.com/assets/11/0516/2212.256";
+
         Picasso.with(CompletedTaskActivity.this)
                 .load(image_url)
 //                .placeholder(R.drawable.no_image)

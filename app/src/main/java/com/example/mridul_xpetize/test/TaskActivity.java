@@ -31,6 +31,7 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -43,9 +44,10 @@ public class TaskActivity extends AppCompatActivity {
     private static String TAG_CHECK = "check";
     ArrayList<HashMap<String, String>> taskList;
     ArrayList<String> selectedStrings = new ArrayList<String>();
-    TextView task,status;
+    TextView task, status;
     private Drawer result = null;
     PreferencesHelper pref;
+    String taskId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +67,7 @@ public class TaskActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName(name).withEmail(name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(name).withEmail(name + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         result = new DrawerBuilder()
@@ -82,8 +84,8 @@ public class TaskActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
-                        if(drawerItem != null){
-                            if(drawerItem.getIdentifier() == 1){
+                        if (drawerItem != null) {
+                            if (drawerItem.getIdentifier() == 1) {
                             }
                         }
                         return false;
@@ -94,7 +96,7 @@ public class TaskActivity extends AppCompatActivity {
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Initialise
-        submit = (Button)findViewById(R.id.button_submit);
+        submit = (Button) findViewById(R.id.button_submit);
         taskList = new ArrayList<HashMap<String, String>>();
         checkList = (ListView) findViewById(R.id.listView_check);
         desc = (TextView) findViewById(R.id.desc);
@@ -110,6 +112,7 @@ public class TaskActivity extends AppCompatActivity {
         String loc_st = i.getStringExtra("loc");
         String start_st = i.getStringExtra("start");
         String end_st = i.getStringExtra("end");
+        taskId = i.getStringExtra("id");
 
         //Display data from main activity
         desc.setText(desc_st);
@@ -128,7 +131,7 @@ public class TaskActivity extends AppCompatActivity {
 
                 String task = ((TextView) view.findViewById(R.id.text_task)).getText().toString();
                 Intent i = new Intent(TaskActivity.this, TaskDetailsActivity.class);
-                i.putExtra("task",task);
+                i.putExtra("task", task);
                 startActivity(i);
             }
         });
@@ -138,25 +141,26 @@ public class TaskActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-//                //Loop through checkboxes and store checked values to array
-//                for (int x = 0; x<checkList.getChildCount();x++){
-//                    cb = (CheckBox)checkList.getChildAt(x).findViewById(R.id.checkBox_task);
-//                    if(cb.isChecked()){
-//                        selectedStrings.add(cb.getText().toString());
-//                    }else{
-//                        selectedStrings.remove(cb.getText().toString());
-//                    }
-//                }
 
                 //Alert Dialog box to show confirmation
                 AlertDialog.Builder builder1 = new AlertDialog.Builder(TaskActivity.this);
                 CharSequence[] cs = selectedStrings.toArray(new CharSequence[selectedStrings.size()]);
                 builder1.setTitle("Confirm");
+                builder1.setMessage("Are you sure ?");
                 builder1.setItems(cs, null);
                 builder1.setCancelable(true);
 
                 builder1.setPositiveButton(
-                        "Ok",
+                        "Yes",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+//                                selectedStrings.clear();
+                                new PostTasks().execute();
+                            }
+                        });
+
+                builder1.setNegativeButton(
+                        "No",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 selectedStrings.clear();
@@ -249,6 +253,51 @@ public class TaskActivity extends AppCompatActivity {
             });
 
             checkList.setAdapter(adapter);
+        }
+    }
+
+    private class PostTasks extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(TaskActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            // Creating service handler class instance
+            ServiceHandler sh = new ServiceHandler();
+
+//            String url = "http://vikray.in/MyService.asmx/GetEmployessJSONNewN";
+            String user_id = pref.GetPreferences("Designation");
+            String username = pref.GetPreferences("Name");
+            int status = 0;
+//            String stDate = start_st.replaceAll("\\s+", "");
+//            String endDate = end_st.replaceAll("\\s+", "");
+//            Log.d("Replaced", stDate);
+            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_PostTaskMst&Para=" + taskId + "&Para=" + user_id + "&Para=" + status + "&Para=" + username;
+            // Making a request to url and getting response
+
+            Log.d("Test", url);
+
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            Log.d("Response: ", "> " + jsonStr);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
         }
     }
 

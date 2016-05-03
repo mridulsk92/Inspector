@@ -39,17 +39,24 @@ public class NotificationActivity extends AppCompatActivity {
     private Drawer result = null;
 
     ProgressDialog pDialog;
-    private static String TAG_INSPECTOR = "insp";
+    private static String TAG_TASKID = "TaskId";
+    private static String TAG_DESCRIPTION = "Description";
+    private static String TAG_STARTDATE = "TaskStartDate";
+    private static String TAG_ENDDATE = "TaskEndDate";
+    private static String TAG_STATUS = "Status";
     ArrayList<HashMap<String, String>> dataList;
     ListView inspector_list;
     JSONArray workers;
-    private static String TAG_NAME = "Name";
+    private static String TAG_USERNAME = "Username";
     private static String TAG_ID = "Id";
     PreferencesHelper pref;
+    JSONArray tasks;
+    String statusString;
 
     List<String> dbListName = new ArrayList<String>();
     List<String> dbListId = new ArrayList<String>();
-    List<String> savedList = new ArrayList<String>();    
+    List<String> savedList = new ArrayList<String>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,7 +75,7 @@ public class NotificationActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName(name).withEmail(name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(name).withEmail(name + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         //Side Drawer contents
@@ -86,7 +93,7 @@ public class NotificationActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
-                        if(drawerItem != null){
+                        if (drawerItem != null) {
 
                         }
                         return false;
@@ -105,51 +112,34 @@ public class NotificationActivity extends AppCompatActivity {
 //            GetSavedWorkerList();
 //        }
 
-        new GetWorkerList().execute();
+        new GetTaskList().execute();
 
         //onItem click listener for list items
         inspector_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                String name = ((TextView) view.findViewById(R.id.inspector)).getText().toString();
-                String worker_id = ((TextView) view.findViewById(R.id.worker_id)).getText().toString();
+                String username = ((TextView) view.findViewById(R.id.username)).getText().toString();
+                String task_id = ((TextView) view.findViewById(R.id.task_id)).getText().toString();
 
                 Intent intent = new Intent(NotificationActivity.this, CompletedTaskActivity.class);
-                intent.putExtra("name", name);
-                intent.putExtra("id", worker_id);
+                intent.putExtra("name", username);
+                intent.putExtra("id", task_id);
                 startActivity(intent);
 
             }
         });
     }
 
-    private void GetSavedWorkerList() {
-
-        TinyDB tiny = new TinyDB(NotificationActivity.this);
-        savedList = tiny.getListString("Names");
-
-        for (int i = 0; i < savedList.size(); i++) {
-
-            String name = savedList.get(i);
-            HashMap<String, String> contact = new HashMap<String, String>();
-
-            // adding each child node to HashMap key => value
-            contact.put(TAG_INSPECTOR, name);
-            dataList.add(contact);
-        }
-
-        ListAdapter adapter = new SimpleAdapter(
-                NotificationActivity.this, dataList,
-                R.layout.layout_worker, new String[]{TAG_INSPECTOR}, new int[]{R.id.inspector,
-        });
-
-        inspector_list.setAdapter(adapter);
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) NotificationActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    //AsyncTask to get rejected workers(to be edited)
-    private class GetWorkerList extends AsyncTask<Void, Void, Void> {
+    //AsyncTask to get tasks(to be edited)
+    private class GetTaskList extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
@@ -167,39 +157,45 @@ public class NotificationActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_GetUserMst&Para=3";
-
+            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_GetCompTsk&Para=" + 3;
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
 
             Log.d("Response: ", "> " + jsonStr);
 
             if (jsonStr != null) {
+
                 try {
 
-                    workers = new JSONArray(jsonStr);
+                    tasks = new JSONArray(jsonStr);
+
                     // looping through All Contacts
-                    for (int i = 0; i < workers.length(); i++) {
-                        JSONObject c = workers.getJSONObject(i);
+                    for (int i = 0; i < tasks.length(); i++) {
+                        JSONObject c = tasks.getJSONObject(i);
 
                         String id = c.getString(TAG_ID);
-                        String name = c.getString(TAG_NAME);
-
-                        dbListName.add(name);
-                        dbListId.add(id);
+                        String taskID = c.getString(TAG_TASKID);
+                        String username = c.getString(TAG_USERNAME);
+                        String start_og = c.getString(TAG_STARTDATE);
+                        String end_og = c.getString(TAG_ENDDATE);
+                        int status = c.getInt(TAG_STATUS);
+                        if (status == 0) {
+                            statusString = "Pending Approval";
+                        }
 
                         // tmp hashmap for single contact
                         HashMap<String, String> contact = new HashMap<String, String>();
 
                         // adding each child node to HashMap key => value
-                        contact.put(TAG_INSPECTOR, name);
-                        contact.put(TAG_ID,id);
+                        contact.put(TAG_USERNAME, "Username : " + username);
+                        contact.put(TAG_ID, id);
+                        contact.put(TAG_TASKID, taskID);
+                        contact.put(TAG_STARTDATE, "Start Date : " + start_og);
+                        contact.put(TAG_ENDDATE, "End Date : " + end_og);
+                        contact.put(TAG_STATUS, "Status : " + statusString);
                         dataList.add(contact);
 
                     }
-                    TinyDB tiny = new TinyDB(NotificationActivity.this);
-                    tiny.putListString("Names", (ArrayList<String>) dbListName);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -216,22 +212,19 @@ public class NotificationActivity extends AppCompatActivity {
             // Dismiss the progress dialog
             if (pDialog.isShowing())
                 pDialog.dismiss();
-            /**
-             * Updating parsed JSON data into ListView
-             * */
+
             ListAdapter adapter = new SimpleAdapter(
                     NotificationActivity.this, dataList,
-                    R.layout.layout_worker, new String[]{TAG_INSPECTOR, TAG_ID}, new int[]{R.id.inspector,R.id.worker_id
-            });
+                    R.layout.task_list, new String[]{TAG_USERNAME, TAG_ID, TAG_TASKID, TAG_STARTDATE, TAG_ENDDATE, TAG_STATUS},
+                    new int[]{R.id.username, R.id.id, R.id.task_id, R.id.start, R.id.end, R.id.status});
 
             inspector_list.setAdapter(adapter);
         }
     }
 
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) NotificationActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    @Override
+    protected void onPause() {
+        super.onPause();
+        super.finish();
     }
 }

@@ -20,13 +20,14 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:visibility="gone"
+            android:visibility="visible"
             android:text="Description" />
 
         <TextView
             android:id="@+id/username"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:padding="5dp"
             android:text="Username" />
 
@@ -68,12 +69,13 @@
             android:layout_height="wrap_content"
             android:padding="5dp"
             android:text="Priority"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
         <TextView
             android:id="@+id/status"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:padding="5dp"
             android:text="Status" />
 

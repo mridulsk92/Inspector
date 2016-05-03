@@ -128,8 +128,8 @@ public class MainActivity extends AppCompatActivity {
                                 //Load high priority tasks
                                 ListAdapter adapter = new SimpleAdapter(
                                         MainActivity.this, highPriorityList,
-                                        R.layout.task_list, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
 
                                 task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 4) {
@@ -137,8 +137,8 @@ public class MainActivity extends AppCompatActivity {
                                 //Load Medium priority tasks
                                 ListAdapter adapter = new SimpleAdapter(
                                         MainActivity.this, mediumPriorityList,
-                                        R.layout.task_list, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
 
                                 task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 5) {
@@ -146,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
                                 //Load low priority tasks
                                 ListAdapter adapter = new SimpleAdapter(
                                         MainActivity.this, lowPriorityList,
-                                        R.layout.task_list, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
 
                                 task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 6) {
@@ -155,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
                                 //Load all tasks
                                 ListAdapter adapter = new SimpleAdapter(
                                         MainActivity.this, dataList,
-                                        R.layout.task_list, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
 
                                 task_list.setAdapter(adapter);
                             }
@@ -179,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 String loc = ((TextView) view.findViewById(R.id.location)).getText().toString();
                 String start = ((TextView) view.findViewById(R.id.start)).getText().toString();
                 String end = ((TextView) view.findViewById(R.id.end)).getText().toString();
+                String id_task = ((TextView)view.findViewById(R.id.id)).getText().toString();
 
                 //Pass the Strings to the next Activity
                 Intent i = new Intent(MainActivity.this, TaskActivity.class);
@@ -186,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 i.putExtra("type", type);
                 i.putExtra("loc", loc);
                 i.putExtra("start", start);
+                i.putExtra("id",id_task);
                 i.putExtra("end", end);
                 startActivity(i);
             }
@@ -194,88 +196,6 @@ public class MainActivity extends AppCompatActivity {
 //        new GetNewTasks().execute();
         new GetTaskList().execute();
 
-    }
-
-    //Filter task function
-    private void FilterTasks() {
-
-        LayoutInflater factory = LayoutInflater.from(this);
-        final View filterView = factory.inflate(
-                R.layout.filter_dialog, null);
-        final AlertDialog filterDialog = new AlertDialog.Builder(this).create();
-        filterDialog.setView(filterView);
-
-        //Initialise
-        final RadioButton priorityHigh = (RadioButton) filterView.findViewById(R.id.priority_high);
-        final RadioButton priorityLow = (RadioButton) filterView.findViewById(R.id.priority_low);
-        final RadioButton dateNew = (RadioButton) filterView.findViewById(R.id.date_new);
-        final RadioButton dateOld = (RadioButton) filterView.findViewById(R.id.date_old);
-        final RadioButton taskNew = (RadioButton) filterView.findViewById(R.id.task_new);
-        final RadioButton taskRejected = (RadioButton) filterView.findViewById(R.id.task_rejected);
-        Button applyFilter = (Button) filterView.findViewById(R.id.filter_apply_btn);
-
-        //Priority high low
-        priorityHigh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                priorityLow.setChecked(false);
-            }
-        });
-        priorityLow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                priorityHigh.setChecked(false);
-            }
-        });
-
-        //Date New/Old
-        dateNew.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dateOld.setChecked(false);
-            }
-        });
-        dateOld.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dateNew.setChecked(false);
-            }
-        });
-
-        //Task New/Rejected
-        taskNew.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                taskRejected.setChecked(false);
-            }
-        });
-        taskRejected.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                taskNew.setChecked(false);
-            }
-        });
-
-        //Apply button onClick
-        applyFilter.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                //Check which filter and apply
-//                if (taskNew.isChecked()) {
-//                    new GetNewTasks().execute();
-//                    filterDialog.dismiss();
-//                } else if (taskRejected.isChecked()) {
-//                    new GetRejectedTasks().execute();
-//                    filterDialog.dismiss();
-//                } else {
-//                    filterDialog.dismiss();
-//                }
-                filterDialog.dismiss();
-            }
-        });
-        filterDialog.show();
     }
 
     //AsyncTask to get rejected tasks(to be edited)
@@ -398,8 +318,8 @@ public class MainActivity extends AppCompatActivity {
 
             ListAdapter adapter = new SimpleAdapter(
                     MainActivity.this, dataList,
-                    R.layout.task_list, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                    new int[]{R.id.desc, R.id.task_id, R.id.start, R.id.end, R.id.priority});
+                    R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
+                    new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
 
             task_list.setAdapter(adapter);
         }

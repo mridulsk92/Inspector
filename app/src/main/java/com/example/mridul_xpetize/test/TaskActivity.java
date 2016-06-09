@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -280,7 +281,7 @@ public class TaskActivity extends AppCompatActivity {
 //            String stDate = start_st.replaceAll("\\s+", "");
 //            String endDate = end_st.replaceAll("\\s+", "");
 //            Log.d("Replaced", stDate);
-            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_PostTaskMst&Para=" + taskId + "&Para=" + user_id + "&Para=" + status + "&Para=" + username;
+            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_PostTaskMst&Para=" + taskId + "&Para=" + user_id + "&Para=" + status + "&Para=" + username;
             // Making a request to url and getting response
 
             Log.d("Test", url);

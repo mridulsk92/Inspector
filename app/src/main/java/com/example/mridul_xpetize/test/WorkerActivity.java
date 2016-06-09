@@ -3,6 +3,7 @@ package com.example.mridul_xpetize.test;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -91,8 +92,30 @@ public class WorkerActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Click action
-                AddTask();
+
+                CharSequence options[] = new CharSequence[] {"Select Existing Tasks", "Create New Task"};
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(WorkerActivity.this);
+                builder.setTitle("Select");
+                builder.setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // the user clicked on options[which]
+                        if (which == 0) {
+                            //Code for Existing Tasks
+                        } else {
+                            AddTask();
+                        }
+                    }
+                });
+                builder.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        //Cancell Dialog
+                    }
+                });
+                builder.show();
             }
         });
 
@@ -340,7 +363,7 @@ public class WorkerActivity extends AppCompatActivity {
             ServiceHandler sh = new ServiceHandler();
 
 //            String url = "http://vikray.in/MyService.asmx/GetEmployessJSONNewN";
-            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_InsertTaskMst&Para=" + desc + "&Para=" + worker_id + "&Para=2&Para=" + stdate + "&Para=" + enddate + "&Para=" + 3 + "&Para=" + priority + "&Para=" + 2;
+            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_InsertTaskMst&Para=" + desc + "&Para=" + worker_id + "&Para=2&Para=" + stdate + "&Para=" + enddate + "&Para=" + 3 + "&Para=" + priority + "&Para=" + 2;
             // Making a request to url and getting response
 
             Log.d("Test", url);
@@ -387,7 +410,7 @@ public class WorkerActivity extends AppCompatActivity {
             ServiceHandler sh = new ServiceHandler();
 
 //            String url = "http://vikray.in/MyService.asmx/GetEmployessJSONNewN";
-            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_GetTaskMst&Para=" + worker_id;
+            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_GetTaskMst&Para=" + worker_id;
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
 

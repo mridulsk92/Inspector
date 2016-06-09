@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <CheckBox
+        android:id="@+id/checkBox_high"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/checkBox_medium"
+        android:checked="false"
+        android:text="High Priority" />
+
+    <EditText
+        android:id="@+id/editText_comment"
+        android:layout_width="fill_parent"
+        android:layout_height="160dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/edit_text_style"
+        android:gravity="top"
+        android:hint="Type Your Comment Here.."
+        android:padding="5dp" />
+
+    <CheckBox
+        android:id="@+id/checkBox_medium"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/editText_comment"
+        android:layout_alignRight="@+id/editText_comment"
+        android:layout_below="@+id/editText_comment"
+        android:checked="false"
+        android:text="Medium Priority" />
+
+    <CheckBox
+        android:id="@+id/checkBox_low"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBox_high"
+        android:checked="false"
+        android:text="Low Priority" />
+
+    <Button
+        android:id="@+id/button_reject"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBox_low"
+        android:layout_centerHorizontal="true"
+        android:text="Reject" />
+
+</RelativeLayout>

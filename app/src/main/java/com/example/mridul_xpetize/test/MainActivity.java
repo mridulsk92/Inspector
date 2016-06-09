@@ -2,17 +2,21 @@ package com.example.mridul_xpetize.test;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -52,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG_END = "end";
     ArrayList<HashMap<String, String>> taskList;
     PreferencesHelper pref;
+    LayoutInflater inflater;
+    CustomAdapter cardAdapter;
 
     JSONArray tasks;
 
@@ -61,10 +67,10 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG_ENDDATE = "TaskEndDate";
     private static String TAG_PRIORITY = "TaskPriority";
 
-    ArrayList<HashMap<String, String>> dataList;
-    ArrayList<HashMap<String, String>> highPriorityList;
-    ArrayList<HashMap<String, String>> mediumPriorityList;
-    ArrayList<HashMap<String, String>> lowPriorityList;
+    ArrayList<HashMap<String, Object>> dataList;
+    ArrayList<HashMap<String, Object>> highPriorityList;
+    ArrayList<HashMap<String, Object>> mediumPriorityList;
+    ArrayList<HashMap<String, Object>> lowPriorityList;
 
 
     @Override
@@ -82,10 +88,10 @@ public class MainActivity extends AppCompatActivity {
         taskList = new ArrayList<HashMap<String, String>>();
 
         task_list = (ListView) findViewById(R.id.listView_tasks);
-        dataList = new ArrayList<HashMap<String, String>>();
-        highPriorityList = new ArrayList<HashMap<String, String>>();
-        mediumPriorityList = new ArrayList<HashMap<String, String>>();
-        lowPriorityList = new ArrayList<HashMap<String, String>>();
+        dataList = new ArrayList<HashMap<String, Object>>();
+        highPriorityList = new ArrayList<HashMap<String, Object>>();
+        mediumPriorityList = new ArrayList<HashMap<String, Object>>();
+        lowPriorityList = new ArrayList<HashMap<String, Object>>();
 
         taskList = new ArrayList<HashMap<String, String>>();
         pref = new PreferencesHelper(MainActivity.this);
@@ -126,39 +132,26 @@ public class MainActivity extends AppCompatActivity {
                             if (drawerItem.getIdentifier() == 3) {
 
                                 //Load high priority tasks
-                                ListAdapter adapter = new SimpleAdapter(
-                                        MainActivity.this, highPriorityList,
-                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
+                                cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, highPriorityList);
+                                task_list.setAdapter(cardAdapter);
 
-                                task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 4) {
 
                                 //Load Medium priority tasks
-                                ListAdapter adapter = new SimpleAdapter(
-                                        MainActivity.this, mediumPriorityList,
-                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
+                                cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, mediumPriorityList);
+                                task_list.setAdapter(cardAdapter);
 
-                                task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 5) {
 
                                 //Load low priority tasks
-                                ListAdapter adapter = new SimpleAdapter(
-                                        MainActivity.this, lowPriorityList,
-                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
+                                cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, lowPriorityList);
+                                task_list.setAdapter(cardAdapter);
 
-                                task_list.setAdapter(adapter);
                             } else if (drawerItem.getIdentifier() == 6) {
 
                                 //Load all tasks
-                                ListAdapter adapter = new SimpleAdapter(
-                                        MainActivity.this, dataList,
-                                        R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                                        new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
-
-                                task_list.setAdapter(adapter);
+                                cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, dataList);
+                                task_list.setAdapter(cardAdapter);
                             }
                         }
                         return false;
@@ -195,7 +188,61 @@ public class MainActivity extends AppCompatActivity {
 
 //        new GetNewTasks().execute();
         new GetTaskList().execute();
+    }
 
+
+    //Define Custom Adapter for Message Cards
+    private class CustomAdapter extends ArrayAdapter<HashMap<String, Object>> {
+
+        public CustomAdapter(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
+
+            //let android do the initializing :)
+            super(context, textViewResourceId, Strings);
+        }
+
+        //class for caching the views in a row
+        private class ViewHolder {
+
+            TextView status, desc, priority, startdate, enddate, loc, id;
+            CardView cv;
+        }
+
+        //Initialise
+        ViewHolder viewHolder;
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+
+            if (convertView == null) {
+
+                //inflate the custom layout
+                convertView = inflater.from(parent.getContext()).inflate(R.layout.task_list, parent, false);
+                viewHolder = new ViewHolder();
+
+                //cache the views
+                viewHolder.status = (TextView) convertView.findViewById(R.id.status);
+                viewHolder.desc = (TextView) convertView.findViewById(R.id.desc);
+                viewHolder.priority = (TextView) convertView.findViewById(R.id.priority);
+                viewHolder.startdate = (TextView) convertView.findViewById(R.id.start);
+                viewHolder.enddate = (TextView) convertView.findViewById(R.id.end);
+                viewHolder.loc = (TextView) convertView.findViewById(R.id.location);
+                viewHolder.id = (TextView) convertView.findViewById(R.id.task_id);
+                viewHolder.cv = (CardView) convertView.findViewById(R.id.card_tasks);
+
+                //link the cached views to the convertview
+                convertView.setTag(viewHolder);
+            } else
+                viewHolder = (ViewHolder) convertView.getTag();
+
+            //set the data to be displayed
+//            viewHolder.status.setText(dataList.get(position).get("Status").toString());
+            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
+            viewHolder.priority.setText(dataList.get(position).get("TaskPriority").toString());
+            viewHolder.startdate.setText(dataList.get(position).get("TaskStartDate").toString());
+            viewHolder.enddate.setText(dataList.get(position).get("TaskEndDate").toString());
+            viewHolder.id.setText(dataList.get(position).get("Id").toString());
+            return convertView;
+        }
     }
 
     //AsyncTask to get rejected tasks(to be edited)
@@ -222,7 +269,9 @@ public class MainActivity extends AppCompatActivity {
             ServiceHandler sh = new ServiceHandler();
 
             String userid = pref.GetPreferences("User Id");
-            String url = "http://vikray.in/MyService.asmx/ExcProcedure?Para=Proc_GetTaskMst&Para=" + userid;
+            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_GetTaskMst&Para=" + userid;
+
+//            String url = "http://10.0.2.2/OnlineSalesService/OnlineSalesService.svc/GetPropertyNames";
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
 
@@ -247,7 +296,7 @@ public class MainActivity extends AppCompatActivity {
 
                             priority_string = "High";
 
-                            HashMap<String, String> tempHigh = new HashMap<String, String>();
+                            HashMap<String, Object> tempHigh = new HashMap<String, Object>();
 
                             tempHigh.put(TAG_DESCRIPTION, "Description : " + desc);
                             tempHigh.put(TAG_ID, id);
@@ -260,20 +309,20 @@ public class MainActivity extends AppCompatActivity {
 
                             priority_string = "Medium";
 
-                            HashMap<String, String> tempMedium = new HashMap<String, String>();
+                            HashMap<String, Object> tempMedium = new HashMap<String, Object>();
 
                             tempMedium.put(TAG_DESCRIPTION, "Description : " + desc);
                             tempMedium.put(TAG_ID, id);
                             tempMedium.put(TAG_STARTDATE, "Start Date : " + st_date);
                             tempMedium.put(TAG_ENDDATE, "End Date : " + end_date);
-                            tempMedium.put(TAG_PRIORITY, "Priority : " + priority_string);
+
                             mediumPriorityList.add(tempMedium);
 
                         } else if (priority == 3) {
 
                             priority_string = "Low";
 
-                            HashMap<String, String> tempLow = new HashMap<String, String>();
+                            HashMap<String, Object> tempLow = new HashMap<String, Object>();
 
                             tempLow.put(TAG_DESCRIPTION, "Description : " + desc);
                             tempLow.put(TAG_ID, id);
@@ -286,9 +335,8 @@ public class MainActivity extends AppCompatActivity {
                             priority_string = "High";
                         }
 
-
                         // tmp hashmap for single contact
-                        HashMap<String, String> contact = new HashMap<String, String>();
+                        HashMap<String, Object> contact = new HashMap<String, Object>();
 
                         // adding each child node to HashMap key => value
                         contact.put(TAG_DESCRIPTION, "Description : " + desc);
@@ -316,13 +364,8 @@ public class MainActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            ListAdapter adapter = new SimpleAdapter(
-                    MainActivity.this, dataList,
-                    R.layout.task_list_main, new String[]{TAG_DESCRIPTION, TAG_ID, TAG_STARTDATE, TAG_ENDDATE, TAG_PRIORITY},
-                    new int[]{R.id.desc, R.id.id, R.id.start, R.id.end, R.id.priority});
-
-            task_list.setAdapter(adapter);
+            cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, dataList);
+            task_list.setAdapter(cardAdapter);
         }
     }
-
 }

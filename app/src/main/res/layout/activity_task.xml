@@ -44,18 +44,19 @@
                 android:layout_toStartOf="@+id/imageButton" />
 
             <TextView
-                android:id="@+id/type"
+                android:id="@+id/comments"
                 android:layout_width="fill_parent"
                 android:layout_below="@+id/desc"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
-                android:text="Type of task :" />
+                android:text="Comments" />
 
             <TextView
                 android:id="@+id/start"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
+                android:visibility="gone"
                 android:layout_below="@+id/type"
                 android:text="Start Date" />
 
@@ -63,17 +64,18 @@
                 android:id="@+id/end"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:padding="5dp"
                 android:layout_below="@+id/start"
                 android:text="End Date" />
 
             <TextView
-                android:id="@+id/location"
+                android:id="@+id/priority"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
-                android:layout_below="@+id/end"
-                android:text="Location" />
+                android:layout_below="@+id/comments"
+                android:text="Priority" />
 
         </RelativeLayout>
     </android.support.v7.widget.CardView>
@@ -94,20 +96,44 @@
         card_view:cardElevation="2dp"
         card_view:contentPadding="16dp">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ListView
-                android:id="@+id/listView_check"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/description" />
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Assign To"
+                android:layout_marginLeft="5dp"
+                android:id="@+id/text_assign"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@+id/AssignButton"
+                android:layout_toEndOf="@+id/AssignButton" />
 
-        </LinearLayout>
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/AssignButton"
+                android:src="@drawable/add_ic"
+                android:background="@null"
+                android:layout_gravity="right"
+                android:layout_alignBottom="@+id/text_assign"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/textView_worker"
+                android:layout_alignTop="@+id/checkList"
+                android:layout_alignLeft="@+id/checkList"
+                android:layout_alignStart="@+id/checkList"
+                android:layout_marginLeft="47dp"
+                android:layout_marginStart="47dp"
+                android:layout_marginTop="49dp" />
+        </RelativeLayout>
 
     </android.support.v7.widget.CardView>
 

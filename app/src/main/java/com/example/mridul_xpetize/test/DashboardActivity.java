@@ -35,7 +35,7 @@ public class DashboardActivity extends AppCompatActivity {
         toolbar.setTitle("Inspector");
 
         pref = new PreferencesHelper(DashboardActivity.this);
-        String name = pref.GetPreferences("Name");
+        String name = pref.GetPreferences("UserName");
 
         //Adding Header to the Navigation Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()

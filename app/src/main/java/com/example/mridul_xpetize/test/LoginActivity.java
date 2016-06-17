@@ -24,18 +24,16 @@ public class LoginActivity extends AppCompatActivity {
     int response;
     PreferencesHelper pref;
 
-    JSONArray tasks;
-    private static String TAG_NAME = "Name";
-    private static String TAG_ID = "Id";
-    private static String TAG_DESIGNATION = "Designation";
-    private static String TAG_USERNAME = "UserName";
+    private static String TAG_NAME = "UserName";
+    private static String TAG_ID = "UserId";
+    private static String TAG_MESSAGE = "Message";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        //Intialise
+        //Initialise
         username = (EditText) findViewById(R.id.editText_username);
         password = (EditText) findViewById(R.id.editText_password);
         login = (Button) findViewById(R.id.button_login);
@@ -46,15 +44,18 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                //Get EditText Values
                 username_st = username.getText().toString();
                 password_st = password.getText().toString();
 
+                //Call Post Data function
                 new PostLogin().execute();
 
             }
         });
     }
 
+    //Class tp post data
     private class PostLogin extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -69,37 +70,34 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... arg0) {
+
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
-
-            String designation = pref.GetPreferences("Designation");
-            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_ChkLogin&Para=" + username_st + "&Para=" + password_st + "&Para=" + designation;
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/CheckUserLogin/" + username_st + "/" + password_st + "/Inspector";
 
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            Log.d("Url", url);
             Log.d("Response: ", "> " + jsonStr);
 
             if (jsonStr != null) {
 
                 try {
 
-                    tasks = new JSONArray(jsonStr);
-                    // looping through All Contacts
-                    for (int i = 0; i < tasks.length(); i++) {
-                        JSONObject c = tasks.getJSONObject(i);
+                    JSONObject jsonObject = new JSONObject(jsonStr);
 
-                        String id = c.getString(TAG_ID);
-                        String name = c.getString(TAG_NAME);
-                        String username = c.getString(TAG_USERNAME);
+                    String id = jsonObject.getString(TAG_ID);
+                    String name = jsonObject.getString(TAG_NAME);
+                    String message = jsonObject.getString(TAG_MESSAGE);
 
-                        if (username.equals(username_st)) {
-                            response = 200;
-                            pref.SavePreferences("User Id", id);
-                            pref.SavePreferences("Name", name);
-                            pref.SavePreferences("User Name", username);
-                        }
-
+                    if (message.equals("Success")) {
+                        response = 200;
+                        pref.SavePreferences("UserId",id);
+                        pref.SavePreferences("UserName",name);
+                    } else {
+                        response = 201;
                     }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -116,16 +114,17 @@ public class LoginActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
+            //If success Login
             if (response == 200) {
                 Intent i = new Intent(LoginActivity.this, DashboardActivity.class);
                 startActivity(i);
             } else {
                 Toast.makeText(LoginActivity.this, "Please Check Username and Password", Toast.LENGTH_SHORT).show();
             }
-
         }
     }
 
+    //Remove Activity from background onPause
     @Override
     protected void onPause() {
         super.onPause();

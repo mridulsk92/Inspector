@@ -180,7 +180,7 @@ public class CompletedTaskActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-            String url = getString(R.string.url_string)+"MyService.asmx/ExcProcedure?Para=Proc_RejectTsk&Para=" + task_id;
+            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_RejectTsk&Para=" + task_id;
             Log.d("url",url);
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);

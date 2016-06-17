@@ -42,10 +42,10 @@ public class WorkerListActivity extends AppCompatActivity {
     ProgressDialog pDialog;
     private static String TAG_INSPECTOR = "insp";
     ArrayList<HashMap<String, String>> dataList;
-    ListView inspector_list;
+    ListView worker_list;
     JSONArray workers;
-    private static String TAG_NAME = "Name";
-    private static String TAG_ID = "Id";
+    private static String TAG_NAME = "UserName";
+    private static String TAG_ID = "UserId";
     PreferencesHelper pref;
 
     List<String> dbListName = new ArrayList<String>();
@@ -63,7 +63,7 @@ public class WorkerListActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(Color.WHITE);
 
         pref = new PreferencesHelper(WorkerListActivity.this);
-        String name = pref.GetPreferences("Name");
+        String name = pref.GetPreferences("UserName");
 
         //Side Drawer Header
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -95,22 +95,18 @@ public class WorkerListActivity extends AppCompatActivity {
                     }
                 }).build();
 
+        //ToggleButton on Toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
+        //Initialise
         dataList = new ArrayList<HashMap<String, String>>();
-        inspector_list = (ListView) findViewById(R.id.listView_workers);
-
-//        if (isNetworkAvailable() && !savedList.isEmpty()) {
-//            new GetWorkerList().execute();
-//        } else {
-//            GetSavedWorkerList();
-//        }
+        worker_list = (ListView) findViewById(R.id.listView_workers);
 
         new GetWorkerList().execute();
 
         //onItem click listener for list items
-        inspector_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        worker_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -126,38 +122,15 @@ public class WorkerListActivity extends AppCompatActivity {
         });
     }
 
-    private void GetSavedWorkerList() {
-
-        TinyDB tiny = new TinyDB(WorkerListActivity.this);
-        savedList = tiny.getListString("Names");
-
-        for (int i = 0; i < savedList.size(); i++) {
-
-            String name = savedList.get(i);
-            HashMap<String, String> contact = new HashMap<String, String>();
-
-            // adding each child node to HashMap key => value
-            contact.put(TAG_INSPECTOR, name);
-            dataList.add(contact);
-        }
-
-        ListAdapter adapter = new SimpleAdapter(
-                WorkerListActivity.this, dataList,
-                R.layout.layout_worker, new String[]{TAG_INSPECTOR}, new int[]{R.id.inspector,
-        });
-
-        inspector_list.setAdapter(adapter);
-
-    }
-
     //AsyncTask to get rejected workers(to be edited)
     private class GetWorkerList extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            // Showing progress dialog
+
             dataList.clear();
+            // Showing progress dialog
             pDialog = new ProgressDialog(WorkerListActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
@@ -169,7 +142,7 @@ public class WorkerListActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_GetUserMst&Para=3";
+            String url = getString(R.string.url)+"EagleXpetizeService.svc/UsersListByType/Worker";
 
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
@@ -180,15 +153,13 @@ public class WorkerListActivity extends AppCompatActivity {
                 try {
 
                     workers = new JSONArray(jsonStr);
-                    // looping through All Contacts
+
+                    // looping through Array
                     for (int i = 0; i < workers.length(); i++) {
                         JSONObject c = workers.getJSONObject(i);
 
                         String id = c.getString(TAG_ID);
                         String name = c.getString(TAG_NAME);
-
-                        dbListName.add(name);
-                        dbListId.add(id);
 
                         // tmp hashmap for single contact
                         HashMap<String, String> contact = new HashMap<String, String>();
@@ -199,9 +170,6 @@ public class WorkerListActivity extends AppCompatActivity {
                         dataList.add(contact);
 
                     }
-                    TinyDB tiny = new TinyDB(WorkerListActivity.this);
-                    tiny.putListString("Names", (ArrayList<String>) dbListName);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -218,22 +186,13 @@ public class WorkerListActivity extends AppCompatActivity {
             // Dismiss the progress dialog
             if (pDialog.isShowing())
                 pDialog.dismiss();
-            /**
-             * Updating parsed JSON data into ListView
-             * */
+
             ListAdapter adapter = new SimpleAdapter(
                     WorkerListActivity.this, dataList,
                     R.layout.layout_worker, new String[]{TAG_INSPECTOR, TAG_ID}, new int[]{R.id.inspector,R.id.worker_id
             });
 
-            inspector_list.setAdapter(adapter);
+            worker_list.setAdapter(adapter);
         }
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) WorkerListActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }

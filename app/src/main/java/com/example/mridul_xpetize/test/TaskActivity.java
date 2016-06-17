@@ -31,24 +31,44 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
 import org.w3c.dom.Text;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class TaskActivity extends AppCompatActivity {
 
-    TextView desc, type, loc, start, end;
-    ListView checkList;
+    TextView desc, comments, priority, assigned_worker, type, loc, start, end, assignTo;
+    String id_st, desc_st, comments_st, priority_st, taskId, subtaskId, status_id, selected_id;
+
+    ImageButton assignTo_button;
     Button submit;
     ProgressDialog pDialog;
-    private static String TAG_CHECK = "check";
-    ArrayList<HashMap<String, String>> taskList;
-    ArrayList<String> selectedStrings = new ArrayList<String>();
-    TextView task, status;
-    private Drawer result = null;
     PreferencesHelper pref;
-    String taskId;
+    
+    ArrayList<HashMap<String, String>> dataList;
+    ArrayList<String> selectedStrings = new ArrayList<String>();
+    List<String> popupList = new ArrayList<String>();
+    List<String> popupListId = new ArrayList<String>();
+
+    private Drawer result = null;
+    
+    private static String TAG_NAME = "UserName";
+    private static String TAG_ID = "UserId";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +80,9 @@ public class TaskActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
 
+        //Get Saved Preferences
         pref = new PreferencesHelper(TaskActivity.this);
-        String name = pref.GetPreferences("Name");
+        String name = pref.GetPreferences("UserName");
 
         //Side Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -93,47 +114,43 @@ public class TaskActivity extends AppCompatActivity {
                     }
                 }).build();
 
+        //Add Toggle Button on ToolBar
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Initialise
+        assigned_worker = (TextView) findViewById(R.id.textView_worker);
+        dataList = new ArrayList<HashMap<String, String>>();
+        assignTo = (TextView) findViewById(R.id.text_assign);
+        assignTo_button = (ImageButton) findViewById(R.id.AssignButton);
         submit = (Button) findViewById(R.id.button_submit);
-        taskList = new ArrayList<HashMap<String, String>>();
-        checkList = (ListView) findViewById(R.id.listView_check);
         desc = (TextView) findViewById(R.id.desc);
-        type = (TextView) findViewById(R.id.type);
-        loc = (TextView) findViewById(R.id.location);
+        comments = (TextView) findViewById(R.id.comments);
+        priority = (TextView) findViewById(R.id.priority);
         start = (TextView) findViewById(R.id.start);
         end = (TextView) findViewById(R.id.end);
 
-        //Get data coming from the main activity
+        //Get data coming from the Main activity
         Intent i = getIntent();
-        String desc_st = i.getStringExtra("desc");
-        String type_st = i.getStringExtra("type");
-        String loc_st = i.getStringExtra("loc");
-        String start_st = i.getStringExtra("start");
-        String end_st = i.getStringExtra("end");
-        taskId = i.getStringExtra("id");
-
-        //Display data from main activity
-        desc.setText(desc_st);
-        type.setText(type_st);
-        loc.setText(loc_st);
-        start.setText(start_st);
-        end.setText(end_st);
+        subtaskId = i.getStringExtra("SubTaskId");
+        taskId = i.getStringExtra("TaskId");
 
         //Get Tasks data
-        new LoadCheckList().execute();
+        new LoadSubTask().execute();
 
-        //TaskList onClick Item
-        checkList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //Get Assign Workers
+        assignTo.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                String task = ((TextView) view.findViewById(R.id.text_task)).getText().toString();
-                Intent i = new Intent(TaskActivity.this, TaskDetailsActivity.class);
-                i.putExtra("task", task);
-                startActivity(i);
+            public void onClick(View v) {
+                //Load Worker List
+                new LoadWorkers().execute();
+            }
+        });
+        assignTo_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Load Worker List
+                new LoadWorkers().execute();
             }
         });
 
@@ -175,13 +192,16 @@ public class TaskActivity extends AppCompatActivity {
         });
     }
 
-    //AsyncTask to get Tasks(to be edited)
-    private class LoadCheckList extends AsyncTask<Void, Void, Void> {
-
+    //Get Workers List
+    private class LoadWorkers extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             // Showing progress dialog
+            dataList.clear();
+            popupList.clear();
+            popupListId.clear();
+
             pDialog = new ProgressDialog(TaskActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
@@ -191,51 +211,37 @@ public class TaskActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... arg0) {
             // Creating service handler class instance
-//            ServiceHandler sh = new ServiceHandler();
-//
-//            // Making a request to url and getting response
-//            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            ServiceHandler sh = new ServiceHandler();
 
-//            Log.d("Response: ", "> " + jsonStr);
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/UsersListByType/Worker";
 
-//            if (jsonStr != null) {
-//                try {
-//                    JSONObject jsonObj = new JSONObject(jsonStr);
-//
-//                    // Getting JSON Array node
-//                    contacts = jsonObj.getJSONArray(TAG_CONTACTS);
-//
-//                    // looping through All Contacts
-//                    for (int i = 0; i < contacts.length(); i++) {
-//                        JSONObject c = contacts.getJSONObject(i);
-//
-//                        String id = c.getString(TAG_ID);
-//                        String name = c.getString(TAG_NAME);
-//                        String email = c.getString(TAG_EMAIL);
-//                        String address = c.getString(TAG_ADDRESS);
-//                        String gender = c.getString(TAG_GENDER);
-//
-//                        // Phone node is JSON Object
-//                        JSONObject phone = c.getJSONObject(TAG_PHONE);
-//                        String mobile = phone.getString(TAG_PHONE_MOBILE);
-//                        String home = phone.getString(TAG_PHONE_HOME);
-//                        String office = phone.getString(TAG_PHONE_OFFICE);
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
 
-            // tmp hashmap for single contact
-            HashMap<String, String> contact = new HashMap<String, String>();
-            contact.put(TAG_CHECK, "task1");
-            taskList.add(contact);
+            Log.d("Response: ", "> " + jsonStr);
 
-            HashMap<String, String> temp = new HashMap<String, String>();
-            temp.put(TAG_CHECK, "task2");
-            taskList.add(temp);
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            } else {
-//                Log.e("ServiceHandler", "Couldn't get any data from the url");
-//            }
+            if (jsonStr != null) {
+                try {
+
+                    JSONArray workers = new JSONArray(jsonStr);
+                    // looping through All maps
+                    for (int i = 0; i < workers.length(); i++) {
+                        JSONObject c = workers.getJSONObject(i);
+
+                        String id = c.getString(TAG_ID);
+                        String name = c.getString(TAG_NAME);
+
+                        //Store Worker Name and Id in List
+                        popupList.add(name);
+                        popupListId.add(id);
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.e("ServiceHandler", "Couldn't get any data from the url");
+            }
 
             return null;
         }
@@ -247,15 +253,100 @@ public class TaskActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            ListAdapter adapter = new SimpleAdapter(
-                    TaskActivity.this, taskList,
-                    R.layout.layout_checklist, new String[]{TAG_CHECK
-            }, new int[]{R.id.text_task
-            });
+            AlertDialog.Builder builderSingle = new AlertDialog.Builder(TaskActivity.this);
+            builderSingle.setTitle("Select A Worker");
+            CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
 
-            checkList.setAdapter(adapter);
+            builderSingle.setNegativeButton(
+                    "Cancel",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+
+            builderSingle.setItems(items, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    //Get ID and Name of slected
+                    String name = popupList.get(which);
+                    selected_id = popupListId.get(which);
+                    assigned_worker.setText(name);
+
+                }
+            });
+            builderSingle.show();
         }
     }
+
+    private class LoadSubTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            dataList.clear();
+            pDialog = new ProgressDialog(TaskActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            // Creating service handler class instance
+            ServiceHandler sh = new ServiceHandler();
+
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/" + subtaskId + "/" + taskId + "/0/0";
+
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+
+            Log.d("Response: ", "> " + jsonStr);
+
+            if (jsonStr != null) {
+
+                try {
+
+                    JSONArray subtasks = new JSONArray(jsonStr);
+
+                    // looping through All maps
+                    for (int i = 0; i < subtasks.length(); i++) {
+                        JSONObject c = subtasks.getJSONObject(i);
+
+                        id_st = c.getString("SubTaskId");
+                        desc_st = c.getString("Description");
+                        comments_st = c.getString("Comments");
+                        priority_st = c.getString("Priority");
+                        status_id = c.getString("StatusId");
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.e("ServiceHandler", "Couldn't get any data from the url");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            //Set TextView values
+            desc.setText("Description : " + desc_st);
+            comments.setText("Comments : " + comments_st);
+            priority.setText("Priority : " + priority_st);
+        }
+    }
+
 
     private class PostTasks extends AsyncTask<Void, Void, Void> {
 
@@ -274,20 +365,56 @@ public class TaskActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-//            String url = "http://vikray.in/MyService.asmx/GetEmployessJSONNewN";
             String user_id = pref.GetPreferences("Designation");
-            String username = pref.GetPreferences("Name");
-            int status = 0;
-//            String stDate = start_st.replaceAll("\\s+", "");
-//            String endDate = end_st.replaceAll("\\s+", "");
-//            Log.d("Replaced", stDate);
-            String url = getString(R.string.url)+"MyService.asmx/ExcProcedure?Para=Proc_PostTaskMst&Para=" + taskId + "&Para=" + user_id + "&Para=" + status + "&Para=" + username;
-            // Making a request to url and getting response
 
-            Log.d("Test", url);
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
 
-            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
-            Log.d("Response: ", "> " + jsonStr);
+            // Build JSON string
+            JSONStringer userJson = null;
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("taskDetails")
+                        .object()
+                        .key("TaskId").value(taskId)
+                        .key("AssignedTo").value(selected_id)
+                        .key("AssignedBy").value(user_id)
+                        .key("StatusId").value(status_id)
+                        .key("EndDate").value(null)
+                        .key("StartDate").value(null)
+                        .key("IsSubTask").value("1")
+                        .key("Comments").value(comments_st)
+                        .key("CreatedBy").value(user_id)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+                Log.d("res", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             return null;
         }

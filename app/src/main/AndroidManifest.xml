@@ -18,11 +18,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.mridul_xpetize.test.TaskActivity" />
         </activity>
-        <activity android:name=".TaskDetailsActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.mridul_xpetize.test.TaskDetailsActivity" />
-        </activity>
         <activity android:name=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +27,6 @@
         </activity>
         <activity android:name=".LoginActivity" />
         <activity android:name=".WorkerActivity" />
-        <activity android:name=".FullImageActivity" />
         <activity android:name=".DashboardActivity" />
         <activity android:name=".WorkerListActivity" />
         <activity android:name=".NotificationActivity" />

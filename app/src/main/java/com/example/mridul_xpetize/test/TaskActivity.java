@@ -78,7 +78,8 @@ public class TaskActivity extends AppCompatActivity {
         //Initialise toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.logo_ic);
 
         //Get Saved Preferences
         pref = new PreferencesHelper(TaskActivity.this);

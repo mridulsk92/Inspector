@@ -31,8 +31,8 @@ public class DashboardActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setTitle("Inspector");
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.logo_ic);
 
         pref = new PreferencesHelper(DashboardActivity.this);
         String name = pref.GetPreferences("UserName");
@@ -63,7 +63,7 @@ public class DashboardActivity extends AppCompatActivity {
         //Initialise
         myTasks = (ImageButton)findViewById(R.id.imageButton_myTasks);
         workers = (ImageButton)findViewById(R.id.imageButton_workers);
-        notification = (ImageButton)findViewById(R.id.imageButton_notification);
+        notification = (ImageButton)findViewById(R.id.imageButton_not);
         logout = (ImageButton)findViewById(R.id.imageButton_logout);
 
         //onClick of myTasks

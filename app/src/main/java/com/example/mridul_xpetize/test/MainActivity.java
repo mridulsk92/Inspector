@@ -74,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.logo_ic);
 
         //Initialise Views
         task_list = (ListView) findViewById(R.id.listView_tasks);
@@ -82,43 +83,28 @@ public class MainActivity extends AppCompatActivity {
         pref = new PreferencesHelper(MainActivity.this);
         String acc_name = pref.GetPreferences("UserName");
 
-        //Side Drawer Header
+        //Adding Header to the Navigation Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
+                        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
-        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile));
 
-        //Side Drawer contents
+        //Drawer
         result = new DrawerBuilder()
                 .withActivity(this)
                 .withAccountHeader(headerResult)
                 .withToolbar(toolbar)
                 .withTranslucentStatusBar(false)
-                .withSelectedItem(-1)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new PrimaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withIdentifier(1).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withIdentifier(2).withSelectable(false)
-                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-                    @Override
-                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).build();
 
-                        if (drawerItem != null) {
-                            if (drawerItem.getIdentifier() == 1) {
-
-                                //Clicked About
-
-                            } else if (drawerItem.getIdentifier() == 4) {
-
-                                //Clicked LogOut
-
-                            }
-                        }
-                        return false;
-                    }
-                }).build();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Add ToggleButton to ToolBar
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);

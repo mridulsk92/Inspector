@@ -60,7 +60,8 @@ public class WorkerListActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.logo_ic);
 
         pref = new PreferencesHelper(WorkerListActivity.this);
         String name = pref.GetPreferences("UserName");

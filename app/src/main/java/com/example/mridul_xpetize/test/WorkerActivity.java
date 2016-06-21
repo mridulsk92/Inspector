@@ -96,7 +96,45 @@ public class WorkerActivity extends AppCompatActivity {
         //toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.logo_ic);
+
+        pref = new PreferencesHelper(WorkerActivity.this);
+        String uname = pref.GetPreferences("UserName");
+
+        //Side Drawer Header
+        AccountHeader headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.header)
+                .addProfiles(
+                        new ProfileDrawerItem().withName(uname).withEmail(uname+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                ).build();
+
+        //Side Drawer contents
+        result = new DrawerBuilder()
+                .withActivity(this)
+                .withAccountHeader(headerResult)
+                .withToolbar(toolbar)
+                .withTranslucentStatusBar(false)
+                .withSelectedItem(-1)
+                .withDisplayBelowStatusBar(true)
+                .addDrawerItems(
+                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                        if(drawerItem != null){
+
+                        }
+                        return false;
+                    }
+                }).build();
+
+        //ToggleButton on Toolbar
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //onClick of Floating Button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -127,46 +165,6 @@ public class WorkerActivity extends AppCompatActivity {
         //Show new Subtask List
         new GetSubTaskList().execute();
 
-        pref = new PreferencesHelper(WorkerActivity.this);
-        String acc_name = pref.GetPreferences("Name");
-
-        //Side Drawer
-        AccountHeader headerResult = new AccountHeaderBuilder()
-                .withActivity(this)
-                .withHeaderBackground(R.drawable.header)
-                .addProfiles(
-                        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
-                ).build();
-
-        result = new DrawerBuilder()
-                .withActivity(this)
-                .withAccountHeader(headerResult)
-                .withToolbar(toolbar)
-                .withTranslucentStatusBar(false)
-                .withSelectedItem(-1)
-                .withDisplayBelowStatusBar(true)
-                .addDrawerItems(
-                        new PrimaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withIdentifier(1).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withIdentifier(2).withSelectable(false)
-                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-                    @Override
-                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-
-                        if (drawerItem != null) {
-                            if (drawerItem.getIdentifier() == 1) {
-
-                                //Clicked About
-
-                            } else if (drawerItem.getIdentifier() == 2) {
-
-                                //Clicked LogOut
-
-                            }
-                        }
-                        return false;
-                    }
-                })
-                .build();
     }
 
     private void AddTask() {

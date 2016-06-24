@@ -11,6 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
@@ -65,8 +67,7 @@ public class NotificationActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setLogo(R.drawable.logo_ic);
+        toolbar.setTitle("Inspector");
 
         pref = new PreferencesHelper(NotificationActivity.this);
         String name = pref.GetPreferences("Name");
@@ -227,5 +228,34 @@ public class NotificationActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         super.finish();
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        //inflate menu
+        getMenuInflater().inflate(R.menu.menu_my, menu);
+
+        // Get the notifications MenuItem and LayerDrawable (layer-list)
+        MenuItem item_noti = menu.findItem(R.id.action_noti);
+        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
+
+        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+
+                return false;
+            }
+        });
+
+        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+                return false;
+            }
+        });
+
+        return true;
     }
 }

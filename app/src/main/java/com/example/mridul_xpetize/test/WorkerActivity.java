@@ -15,6 +15,8 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -96,8 +98,7 @@ public class WorkerActivity extends AppCompatActivity {
         //toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setLogo(R.drawable.logo_ic);
+        toolbar.setTitle("Inspector");
 
         pref = new PreferencesHelper(WorkerActivity.this);
         String uname = pref.GetPreferences("UserName");
@@ -107,7 +108,7 @@ public class WorkerActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName(uname).withEmail(uname+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(uname).withEmail(uname + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         //Side Drawer contents
@@ -125,7 +126,7 @@ public class WorkerActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
-                        if(drawerItem != null){
+                        if (drawerItem != null) {
 
                         }
                         return false;
@@ -142,8 +143,34 @@ public class WorkerActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                //Show DialogBox
+                final android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(WorkerActivity.this);
+                alertDialogBuilder.setTitle("Select a Task");
+                final CharSequence items[] = {"Select Pre Defined tasks", "Create Tasks"};
+                alertDialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
 
-                AddTask();
+                        if (which == 0) {
+                            //Select Pre defined tasks
+                            new GetSubTaskList().execute("All");
+                        } else {
+                            //Create tasks
+                            AddTask();
+                        }
+                    }
+                });
+                alertDialogBuilder.setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+
+                            }
+                        });
+
+                android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
 
             }
         });
@@ -163,7 +190,7 @@ public class WorkerActivity extends AppCompatActivity {
         workerName.setText(name);
 
         //Show new Subtask List
-        new GetSubTaskList().execute();
+        new GetSubTaskList().execute("User");
 
     }
 
@@ -380,6 +407,89 @@ public class WorkerActivity extends AppCompatActivity {
         }
     }
 
+    private class AssingnTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(WorkerActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected ArrayList<String> doInBackground(ArrayList<String>... params) {
+
+            ArrayList<String> passed = params[0]; //get passed arraylist
+            String taskid_st = passed.get(0);
+            String userId_st = passed.get(1);
+            String createdBy_st = passed.get(2);
+            String status_st = passed.get(3);
+            String comments_st = passed.get(4);
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            // Build JSON string
+            JSONStringer userJson = null;
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("taskDetails")
+                        .object()
+                        .key("TaskId").value(taskid_st)
+                        .key("AssignedToId").value(userId_st)
+                        .key("AssignedById").value(createdBy_st)
+                        .key("StatusId").value(status_st)
+                        .key("IsSubTask").value(0)
+                        .key("Comments").value(comments_st)
+                        .key("CreatedBy").value(createdBy_st)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+                Log.d("res", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            new GetSubTaskList().execute("User");
+
+        }
+    }
+
     private class PostTasks extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -453,12 +563,11 @@ public class WorkerActivity extends AppCompatActivity {
                 pDialog.dismiss();
 
             //Show new Subtask List
-            new GetSubTaskList().execute();
+            new GetSubTaskList().execute("User");
 
         }
     }
 
-    //Define Custom Adapter for Message Cards
     private class CustomAdapter extends ArrayAdapter<HashMap<String, Object>> {
 
         public CustomAdapter(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
@@ -496,7 +605,6 @@ public class WorkerActivity extends AppCompatActivity {
                 viewHolder.jobOrder = (TextView) convertView.findViewById(R.id.jobOrder);
                 viewHolder.statusId = (TextView) convertView.findViewById(R.id.statusId);
                 viewHolder.id = (TextView) convertView.findViewById(R.id.task_id);
-                viewHolder.cv = (CardView) convertView.findViewById(R.id.card_task);
 
                 //link the cached views to the convertview
                 convertView.setTag(viewHolder);
@@ -515,7 +623,7 @@ public class WorkerActivity extends AppCompatActivity {
     }
 
     //AsyncTask to get tasks(to be edited)
-    private class GetSubTaskList extends AsyncTask<Void, Void, Void> {
+    private class GetSubTaskList extends AsyncTask<String, Void, String> {
 
         @Override
         protected void onPreExecute() {
@@ -531,12 +639,19 @@ public class WorkerActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Void doInBackground(Void... arg0) {
+        protected String doInBackground(String... arg0) {
+
+            String url;
+            String check = arg0[0];
 
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-            String url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/1/1";
+            if (check.equals("User")) {
+                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/1/1";
+            } else {
+                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/1/1";
+            }
 
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
@@ -565,11 +680,12 @@ public class WorkerActivity extends AppCompatActivity {
 
                         //adding each child node to HashMap key => value
                         contact.put("TaskId", id);
-                        contact.put("Description", "Description : " + desc);
+                        contact.put("Description", desc);
                         contact.put("StatusId", statusId);
-                        contact.put("Comments", "Comments : " + comments);
+                        contact.put("Comments", comments);
                         contact.put("SubTaskId", subId);
-                        contact.put("Priority", "Priority : " + priority);
+                        contact.put("Priority", priority);
+                        popupList.add(desc);
                         dataList.add(contact);
 
                     }
@@ -580,20 +696,53 @@ public class WorkerActivity extends AppCompatActivity {
                 Log.e("ServiceHandler", "Couldn't get any data from the url");
             }
 
-            return null;
+            return check;
         }
 
         @Override
-        protected void onPostExecute(Void result) {
+        protected void onPostExecute(String result) {
 
             super.onPostExecute(result);
             // Dismiss the progress dialog
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            cardAdapter = new CustomAdapter(WorkerActivity.this, R.layout.task_list, dataList);
-            added_list.setAdapter(cardAdapter);
+            if(result.equals("User")) {
+                cardAdapter = new CustomAdapter(WorkerActivity.this, R.layout.task_list, dataList);
+                added_list.setAdapter(cardAdapter);
+            }else{
+                CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
+                AlertDialog.Builder builderSingle = new AlertDialog.Builder(WorkerActivity.this);
+                builderSingle.setTitle("Select A Task");
 
+                builderSingle.setNegativeButton(
+                        "Cancel",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                builderSingle.setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String id = dataList.get(which).get("TaskId").toString();
+//                        String statusId = dataList.get(which).get("StatusId").toString();
+                        String comments = dataList.get(which).get("Comments").toString();
+                        String createdBy = dataList.get(which).get("CreatedBy").toString();
+                        ArrayList<String> passing = new ArrayList<String>();
+                        passing.add(id);
+                        passing.add(worker_id);
+                        passing.add(createdBy);
+                        passing.add("1");
+                        passing.add(comments);
+                        passing.add(createdBy);
+                        new AssingnTask().execute(passing);
+                    }
+                });
+                builderSingle.show();
+            }
         }
     }
 
@@ -618,5 +767,36 @@ public class WorkerActivity extends AppCompatActivity {
         empty = findViewById(R.id.empty);
         ListView list = (ListView) findViewById(R.id.listView_task);
         list.setEmptyView(empty);
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        //inflate menu
+        getMenuInflater().inflate(R.menu.menu_my, menu);
+
+        // Get the notifications MenuItem and LayerDrawable (layer-list)
+        MenuItem item_noti = menu.findItem(R.id.action_noti);
+        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
+
+        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+
+                return false;
+            }
+        });
+
+        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+                Intent i = new Intent(WorkerActivity.this, NotificationActivity.class);
+                startActivity(i);
+                return false;
+            }
+        });
+
+        return true;
     }
 }

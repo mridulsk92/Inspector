@@ -16,6 +16,8 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -74,8 +76,7 @@ public class MainActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setLogo(R.drawable.logo_ic);
+        toolbar.setTitle("Inspector");
 
         //Initialise Views
         task_list = (ListView) findViewById(R.id.listView_tasks);
@@ -88,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .addProfiles(
-                        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name+"@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName(acc_name).withEmail(acc_name + "@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 ).build();
 
         //Drawer
@@ -117,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //Get TextView values and assign to String
                 id_task = ((TextView) view.findViewById(R.id.task_id)).getText().toString();
-                
+
                 //Show SubTasks in AlertDialogBox
                 CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
                 AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
@@ -190,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder.enddate = (TextView) convertView.findViewById(R.id.end);
                 viewHolder.loc = (TextView) convertView.findViewById(R.id.location);
                 viewHolder.id = (TextView) convertView.findViewById(R.id.task_id);
-                viewHolder.cv = (CardView) convertView.findViewById(R.id.card_tasks);
 
                 //link the cached views to the convertview
                 convertView.setTag(viewHolder);
@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             return convertView;
         }
     }
-    
+
     //Class to GetTasks
     private class GetTaskList extends AsyncTask<Void, Void, Void> {
 
@@ -252,10 +252,10 @@ public class MainActivity extends AppCompatActivity {
                         // adding each child node to HashMap key => value
                         HashMap<String, Object> taskMap = new HashMap<String, Object>();
 
-                        taskMap.put("Description", "Description : " + desc);
+                        taskMap.put("Description", desc);
                         taskMap.put("TaskId", id);
-                        taskMap.put("Comments", "Comments : " + comments);
-                        taskMap.put("Location", "Location : " + loc);
+                        taskMap.put("Comments", comments);
+                        taskMap.put("Location", loc);
                         dataList.add(taskMap);
 
                         JSONArray subTasks = c.getJSONArray("SubTasks");
@@ -293,5 +293,36 @@ public class MainActivity extends AppCompatActivity {
             cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, dataList);
             task_list.setAdapter(cardAdapter);
         }
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        //inflate menu
+        getMenuInflater().inflate(R.menu.menu_my, menu);
+
+        // Get the notifications MenuItem and LayerDrawable (layer-list)
+        MenuItem item_noti = menu.findItem(R.id.action_noti);
+        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
+
+        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+
+                return false;
+            }
+        });
+
+        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+                Intent i = new Intent(MainActivity.this, NotificationActivity.class);
+                startActivity(i);
+                return false;
+            }
+        });
+
+        return true;
     }
 }

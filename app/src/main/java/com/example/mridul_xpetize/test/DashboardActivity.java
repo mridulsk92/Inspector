@@ -7,6 +7,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -31,8 +33,7 @@ public class DashboardActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setLogo(R.drawable.logo_ic);
+        toolbar.setTitle("Inspector");
 
         pref = new PreferencesHelper(DashboardActivity.this);
         String name = pref.GetPreferences("UserName");
@@ -63,8 +64,6 @@ public class DashboardActivity extends AppCompatActivity {
         //Initialise
         myTasks = (ImageButton)findViewById(R.id.imageButton_myTasks);
         workers = (ImageButton)findViewById(R.id.imageButton_workers);
-        notification = (ImageButton)findViewById(R.id.imageButton_not);
-        logout = (ImageButton)findViewById(R.id.imageButton_logout);
 
         //onClick of myTasks
         myTasks.setOnClickListener(new View.OnClickListener() {
@@ -83,26 +82,6 @@ public class DashboardActivity extends AppCompatActivity {
 
                 Intent i = new Intent(DashboardActivity.this, WorkerListActivity.class);
                 startActivity(i);
-            }
-        });
-
-        //onClick of Notification
-        notification.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent i = new Intent(DashboardActivity.this, NotificationActivity.class);
-                startActivity(i);
-            }
-        });
-
-        //onClick of Logout
-        logout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //trigger dialogbox
-                dialogBox();
             }
         });
     }
@@ -136,5 +115,36 @@ public class DashboardActivity extends AppCompatActivity {
 
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        //inflate menu
+        getMenuInflater().inflate(R.menu.menu_my, menu);
+
+        // Get the notifications MenuItem and LayerDrawable (layer-list)
+        MenuItem item_noti = menu.findItem(R.id.action_noti);
+        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
+
+        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+
+                return false;
+            }
+        });
+
+        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+                Intent i = new Intent(DashboardActivity.this, NotificationActivity.class);
+                startActivity(i);
+                return false;
+            }
+        });
+
+        return true;
     }
 }

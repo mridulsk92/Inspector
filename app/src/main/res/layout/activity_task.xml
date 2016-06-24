@@ -10,8 +10,37 @@
         android:id="@+id/toolbar"
         android:layout_width="fill_parent"
         android:layout_height="?attr/actionBarSize"
+        android:titleTextColor="@color/colorAccent"
+        app:titleTextColor="@color/colorAccent"
+        android:layout_below="@+id/card_main"
         android:background="@color/background"
         app:theme="@style/ToolbarColoredBackArrow" />
+
+    <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_main"
+        layout_height="wrap_content"
+        layout_width="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        card_view:contentPadding="1dp">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView_logo"
+                android:src="@drawable/logo_ic"
+                android:background="@null"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -24,10 +53,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/toolbar"
-        android:layout_margin="5dp"
-        card_view:cardCornerRadius="5dp"
-        card_view:cardElevation="2dp"
-        card_view:contentPadding="16dp">
+        card_view:contentPadding="6dp">
 
         <RelativeLayout
             android:layout_width="fill_parent"
@@ -38,7 +64,7 @@
                 android:id="@+id/desc"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
+                android:padding="1dp"
                 android:text="Description"
                 android:layout_toLeftOf="@+id/imageButton"
                 android:layout_toStartOf="@+id/imageButton" />
@@ -48,7 +74,7 @@
                 android:layout_width="fill_parent"
                 android:layout_below="@+id/desc"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
+                android:paddingLeft="1dp"
                 android:text="Comments" />
 
             <TextView
@@ -73,7 +99,7 @@
                 android:id="@+id/priority"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
+                android:padding="1dp"
                 android:layout_below="@+id/comments"
                 android:text="Priority" />
 
@@ -86,15 +112,11 @@
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/checkList"
         android:layout_width="fill_parent"
-        android:layout_height="200dp"
+        android:layout_height="fill_parent"
         android:layout_above="@+id/button_submit"
         android:layout_below="@+id/description"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"
         android:layout_marginTop="5dp"
-        card_view:cardCornerRadius="5dp"
-        card_view:cardElevation="2dp"
-        card_view:contentPadding="16dp">
+        card_view:contentPadding="6dp">
 
         <RelativeLayout
             android:layout_width="fill_parent"
@@ -142,7 +164,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="5dp"
+        android:layout_margin="1dp"
         android:text="Submit" />
 
 </RelativeLayout>

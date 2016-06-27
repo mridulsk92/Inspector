@@ -407,7 +407,7 @@ public class WorkerActivity extends AppCompatActivity {
         }
     }
 
-    private class AssingnTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
+    private class AssignTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
 
         @Override
         protected void onPreExecute() {
@@ -622,7 +622,6 @@ public class WorkerActivity extends AppCompatActivity {
         }
     }
 
-    //AsyncTask to get tasks(to be edited)
     private class GetSubTaskList extends AsyncTask<String, Void, String> {
 
         @Override
@@ -738,7 +737,7 @@ public class WorkerActivity extends AppCompatActivity {
                         passing.add("1");
                         passing.add(comments);
                         passing.add(createdBy);
-                        new AssingnTask().execute(passing);
+                        new AssignTask().execute(passing);
                     }
                 });
                 builderSingle.show();
@@ -799,4 +798,5 @@ public class WorkerActivity extends AppCompatActivity {
 
         return true;
     }
+
 }

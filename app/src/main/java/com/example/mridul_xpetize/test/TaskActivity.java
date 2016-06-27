@@ -193,7 +193,6 @@ public class TaskActivity extends AppCompatActivity {
         });
     }
 
-    //Get Workers List
     private class LoadWorkers extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -347,7 +346,6 @@ public class TaskActivity extends AppCompatActivity {
             priority.setText("Priority : " + priority_st);
         }
     }
-
 
     private class PostTasks extends AsyncTask<Void, Void, Void> {
 

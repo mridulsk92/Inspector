@@ -154,8 +154,6 @@ public class MainActivity extends AppCompatActivity {
         new GetTaskList().execute();
     }
 
-
-    //Define Custom Adapter for Message Cards
     private class CustomAdapter extends ArrayAdapter<HashMap<String, Object>> {
 
         public CustomAdapter(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
@@ -206,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //Class to GetTasks
     private class GetTaskList extends AsyncTask<Void, Void, Void> {
 
         @Override

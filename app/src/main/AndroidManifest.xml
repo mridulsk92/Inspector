@@ -30,7 +30,6 @@
         <activity android:name=".DashboardActivity" />
         <activity android:name=".WorkerListActivity" />
         <activity android:name=".NotificationActivity" />
-        <activity android:name=".CompletedTaskActivity"></activity>
     </application>
 
 </manifest>

@@ -50,10 +50,6 @@ public class WorkerListActivity extends AppCompatActivity {
     private static String TAG_ID = "UserId";
     PreferencesHelper pref;
 
-    List<String> dbListName = new ArrayList<String>();
-    List<String> dbListId = new ArrayList<String>();
-    List<String> savedList = new ArrayList<String>();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,7 +120,6 @@ public class WorkerListActivity extends AppCompatActivity {
         });
     }
 
-    //AsyncTask to get rejected workers(to be edited)
     private class GetWorkerList extends AsyncTask<Void, Void, Void> {
 
         @Override

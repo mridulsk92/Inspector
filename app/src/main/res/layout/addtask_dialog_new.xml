@@ -17,12 +17,25 @@
             android:padding="16dp">
 
             <EditText
+                android:id="@+id/editText_subName"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_weight="1"
+                android:layout_margin="3dp"
+                android:background="@drawable/edit_text_style"
+                android:hint="SubTask Name"
+                android:padding="10dp" />
+
+            <EditText
                 android:id="@+id/editText_desc"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_weight="1"
+                android:layout_below="@+id/editText_subName"
                 android:background="@drawable/edit_text_style"
                 android:hint="Description"
                 android:padding="10dp" />

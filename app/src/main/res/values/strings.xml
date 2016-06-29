@@ -3,8 +3,8 @@
     <string name="app_name">Inspector</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <!--<string name="url">http://10.0.2.2/</string>-->
-    <string name="url">http://vikray.in/</string>
+    <string name="url">http://10.0.2.2/EagleXpetize/</string>
+    <!--<string name="url">http://vikray.in/</string>-->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

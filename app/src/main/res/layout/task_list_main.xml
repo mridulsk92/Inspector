@@ -1,24 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:padding="6dp"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/desc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Description"
-            android:textSize="10sp"
-            android:paddingTop="2dp"
-            android:gravity="center"
-            android:visibility="visible"
-            android:layout_below="@+id/username"
-            android:layout_toRightOf="@+id/taskname"
-            android:layout_toEndOf="@+id/taskname" />
+    <TextView
+        android:id="@+id/taskname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Task Name "
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_below="@+id/username"
+        android:layout_toRightOf="@+id/username"
+        android:layout_toEndOf="@+id/username" />
 
-        <TextView
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description"
+        android:textSize="10sp"
+        android:paddingTop="2dp"
+        android:gravity="center"
+        android:visibility="visible"
+        android:layout_below="@+id/username"
+        android:layout_toRightOf="@+id/taskname"
+        android:layout_toEndOf="@+id/taskname" />
+
+    <TextView
             android:id="@+id/username"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -59,7 +71,7 @@
             android:text="Location"
             android:layout_margin="1dp"
             android:textSize="10sp"
-            android:visibility="visible"
+            android:visibility="gone"
             android:layout_below="@+id/taskname"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
@@ -111,15 +123,4 @@
             android:text="TaskId"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/taskname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Task Name - "
-            android:textStyle="bold"
-            android:textSize="13sp"
-            android:layout_below="@+id/username"
-            android:layout_toRightOf="@+id/username"
-            android:layout_toEndOf="@+id/username" />
-
-    </RelativeLayout>
+</LinearLayout>

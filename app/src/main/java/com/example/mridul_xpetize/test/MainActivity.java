@@ -41,10 +41,20 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SectionDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -165,8 +175,7 @@ public class MainActivity extends AppCompatActivity {
         //class for caching the views in a row
         private class ViewHolder {
 
-            TextView status, desc, comments, startdate, enddate, loc, id;
-            CardView cv;
+            TextView status, desc, comments, startdate, enddate, loc, id, taskName, assignedBy;
         }
 
         //Initialise
@@ -182,6 +191,8 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
 
                 //cache the views
+                viewHolder.assignedBy = (TextView) convertView.findViewById(R.id.assigned);
+                viewHolder.taskName = (TextView) convertView.findViewById(R.id.taskname);
                 viewHolder.status = (TextView) convertView.findViewById(R.id.status);
                 viewHolder.desc = (TextView) convertView.findViewById(R.id.desc);
                 viewHolder.comments = (TextView) convertView.findViewById(R.id.comments);
@@ -196,10 +207,12 @@ public class MainActivity extends AppCompatActivity {
                 viewHolder = (ViewHolder) convertView.getTag();
 
             //set the data to be displayed
+            viewHolder.taskName.setText(dataList.get(position).get("TaskName").toString());
             viewHolder.id.setText(dataList.get(position).get("TaskId").toString());
-            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
+            viewHolder.assignedBy.setText(dataList.get(position).get("AssignedByName").toString());
+            viewHolder.desc.setText(dataList.get(position).get("TaskDescription").toString());
             viewHolder.comments.setText(dataList.get(position).get("Comments").toString());
-            viewHolder.loc.setText(dataList.get(position).get("Location").toString());
+//            viewHolder.loc.setText(dataList.get(position).get("Location").toString());
             return convertView;
         }
     }
@@ -220,60 +233,101 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... arg0) {
-            // Creating service handler class instance
-            ServiceHandler sh = new ServiceHandler();
 
-            String userid = pref.GetPreferences("UserId");
+            String user_id = pref.GetPreferences("UserId");
 
-            String url = getString(R.string.url) + "EagleXpetizeService.svc/Tasks/0/0";
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
 
-            // Making a request to url and getting response
-            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            // Build JSON string
+            JSONStringer userJson = null;
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("taskDetails")
+                        .object()
+                        .key("TaskDetailsId").value(0)
+                        .key("TaskId").value(0)
+                        .key("AssignedToId").value(user_id)
+                        .key("AssignedById").value(0)
+                        .key("IsSubTask").value(0)
+                        .key("StatusId").value(0)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-            Log.d("Response: ", "> " + jsonStr);
+            Log.d("Json", String.valueOf(userJson));
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
 
-            if (jsonStr != null) {
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
 
-                try {
+            request.setEntity(entity);
 
-                    tasks = new JSONArray(jsonStr);
-                    //Loop through Tasks
-                    for (int i = 0; i < tasks.length(); i++) {
-                        JSONObject c = tasks.getJSONObject(i);
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+                Log.d("res", response);
 
-                        String id = c.getString("TaskId");
-                        String comments = c.getString("Comments");
-                        String desc = c.getString("Description");
-                        String loc = c.getString("Location");
+                if (response != null) {
 
-                        // adding each child node to HashMap key => value
-                        HashMap<String, Object> taskMap = new HashMap<String, Object>();
+                    try {
 
-                        taskMap.put("Description", desc);
-                        taskMap.put("TaskId", id);
-                        taskMap.put("Comments", comments);
-                        taskMap.put("Location", loc);
-                        dataList.add(taskMap);
+                        JSONObject json1 = new JSONObject(response);
+                        tasks = json1.getJSONArray("TaskAssignedResult");
 
-                        JSONArray subTasks = c.getJSONArray("SubTasks");
-                        //Loop through SubTasks
-                        for (int j = 0; j < subTasks.length(); j++) {
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject c = tasks.getJSONObject(i);
 
-                            JSONObject a = subTasks.getJSONObject(j);
-                            String sub_id = a.getString("SubTaskId");
-                            String sub_desc = a.getString("Description");
+                            String id = c.getString("TaskId");
+                            String name = c.getString("TaskName");
+                            String comments = c.getString("Comments");
+                            String assignedBy = c.getString("AssignedByName");
+                            String desc = c.getString("TaskDescription");
+//                            String loc = c.getString("Location");
 
-                            //Load Description and Id's in List
-                            popupList.add(sub_desc);
-                            popupListId.add(sub_id);
+                            // adding each child node to HashMap key => value
+                            HashMap<String, Object> taskMap = new HashMap<String, Object>();
+
+                            taskMap.put("TaskDescription", desc);
+                            taskMap.put("TaskName", name);
+                            taskMap.put("TaskId", id);
+                            taskMap.put("AssignedByName", "Assigned By : " + assignedBy);
+                            taskMap.put("Comments", comments);
+//                            taskMap.put("Location", loc);
+                            dataList.add(taskMap);
+
+//                            JSONArray subTasks = c.getJSONArray("SubTasks");
+//                            //Loop through SubTasks
+//                            for (int j = 0; j < subTasks.length(); j++) {
+//
+//                                JSONObject a = subTasks.getJSONObject(j);
+//                                String sub_id = a.getString("SubTaskId");
+//                                String sub_desc = a.getString("Description");
+//
+//                                //Load Description and Id's in List
+//                                popupList.add(sub_desc);
+//                                popupListId.add(sub_id);
+//                            }
                         }
-
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                } else {
+                    Log.e("ServiceHandler", "Couldn't get any data from the url");
                 }
-            } else {
-                Log.e("ServiceHandler", "Couldn't get any data from the url");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             return null;

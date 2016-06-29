@@ -70,7 +70,7 @@ public class WorkerActivity extends AppCompatActivity {
     PreferencesHelper pref;
     View empty;
 
-    String desc, stdate, enddate, worker_id, comments_st, order_st;
+    String desc, stdate, enddate, worker_id, comments_st, order_st, name_st;
     int priority;
 
     Calendar myCalendarS, myCalendarE;
@@ -145,8 +145,8 @@ public class WorkerActivity extends AppCompatActivity {
 
                 //Show DialogBox
                 final android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(WorkerActivity.this);
-                alertDialogBuilder.setTitle("Select a Task");
-                final CharSequence items[] = {"Select Pre Defined tasks", "Create Tasks"};
+                alertDialogBuilder.setTitle("Select");
+                final CharSequence items[] = {"Select Pre Defined SubTasks", "Create SubTask"};
                 alertDialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -207,6 +207,7 @@ public class WorkerActivity extends AppCompatActivity {
         endCal = (ImageButton) addView.findViewById(R.id.imageButton_endDate);
         myCalendarS = Calendar.getInstance();
         myCalendarE = Calendar.getInstance();
+        final EditText subName = (EditText) addView.findViewById(R.id.editText_subName);
         final EditText editDescription = (EditText) addView.findViewById(R.id.editText_desc);
         final Spinner typeSpinner = (Spinner) addView.findViewById(R.id.spinner_type);
         startDate = (EditText) addView.findViewById(R.id.editText_start);
@@ -230,6 +231,7 @@ public class WorkerActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                name_st = subName.getText().toString();
                 order_st = order.getText().toString();
                 desc = editDescription.getText().toString();
                 stdate = startDate.getText().toString();
@@ -340,7 +342,7 @@ public class WorkerActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
 
-            String url = getString(R.string.url) + "EagleXpetizeService.svc/Tasks/0/0";
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/Tasks/0/0/1";
             Log.d("url", url);
 
             // Making a request to url and getting response
@@ -358,10 +360,10 @@ public class WorkerActivity extends AppCompatActivity {
                         JSONObject c = tasks.getJSONObject(i);
 
                         String id = c.getString("TaskId");
-                        String desc = c.getString("Description");
+                        String name = c.getString("TaskName");
 
                         //Load Names and Ids in List
-                        popupList.add(desc);
+                        popupList.add(name);
                         popupListId.add(id);
 
                     }
@@ -428,6 +430,7 @@ public class WorkerActivity extends AppCompatActivity {
             String createdBy_st = passed.get(2);
             String status_st = passed.get(3);
             String comments_st = passed.get(4);
+            String insp_id = pref.GetPreferences("UserId");
 
             HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
             request.setHeader("Accept", "application/json");
@@ -442,9 +445,9 @@ public class WorkerActivity extends AppCompatActivity {
                         .object()
                         .key("TaskId").value(taskid_st)
                         .key("AssignedToId").value(userId_st)
-                        .key("AssignedById").value(createdBy_st)
+                        .key("AssignedById").value(insp_id)
                         .key("StatusId").value(status_st)
-                        .key("IsSubTask").value(0)
+                        .key("IsSubTask").value(1)
                         .key("Comments").value(comments_st)
                         .key("CreatedBy").value(createdBy_st)
                         .endObject()
@@ -509,6 +512,8 @@ public class WorkerActivity extends AppCompatActivity {
             request.setHeader("Accept", "application/json");
             request.setHeader("Content-type", "application/json");
 
+            String insp_id = pref.GetPreferences("UserId");
+
             // Build JSON string
             JSONStringer userJson = null;
             try {
@@ -517,12 +522,13 @@ public class WorkerActivity extends AppCompatActivity {
                         .key("subTask")
                         .object()
                         .key("TaskId").value(selected_task_id)
+                        .key("SubTaskName").value(name_st)
                         .key("Description").value(desc)
-                        .key("JobOrder").value(order_st)
+                        .key("TaskOrder").value(order_st)
                         .key("StatusId").value("1")
                         .key("PriorityId").value(priority)
                         .key("Comments").value(comments_st)
-                        .key("CreatedBy").value(worker_id)
+                        .key("CreatedBy").value(insp_id)
                         .endObject()
                         .endObject();
             } catch (JSONException e) {
@@ -579,7 +585,7 @@ public class WorkerActivity extends AppCompatActivity {
         //class for caching the views in a row
         private class ViewHolder {
 
-            TextView comments, desc, priority, startdate, enddate, jobOrder, statusId, id, subId;
+            TextView comments, desc, priority, startdate, enddate, jobOrder, statusId, id, subId, createdBy, subName, isSub;
             CardView cv;
         }
 
@@ -596,9 +602,12 @@ public class WorkerActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
 
                 //cache the views
+                viewHolder.subName = (TextView) convertView.findViewById(R.id.subName);
+                viewHolder.createdBy = (TextView) convertView.findViewById(R.id.createdBy);
                 viewHolder.subId = (TextView) convertView.findViewById(R.id.subtask_id);
                 viewHolder.comments = (TextView) convertView.findViewById(R.id.comments);
                 viewHolder.desc = (TextView) convertView.findViewById(R.id.desc);
+                viewHolder.isSub = (TextView) convertView.findViewById(R.id.isSub);
                 viewHolder.priority = (TextView) convertView.findViewById(R.id.priority);
                 viewHolder.startdate = (TextView) convertView.findViewById(R.id.start);
                 viewHolder.enddate = (TextView) convertView.findViewById(R.id.end);
@@ -612,12 +621,18 @@ public class WorkerActivity extends AppCompatActivity {
                 viewHolder = (ViewHolder) convertView.getTag();
 
             //set the data to be displayed
+            viewHolder.subName.setText(dataList.get(position).get("TaskName").toString());
+            viewHolder.createdBy.setText(dataList.get(position).get("CreatedBy").toString());
             viewHolder.comments.setText(dataList.get(position).get("Comments").toString());
-            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
-            viewHolder.priority.setText(dataList.get(position).get("Priority").toString());
+//            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
+//            viewHolder.priority.setText(dataList.get(position).get("Priority").toString());
+//            viewHolder.startdate.setText(dataList.get(position).get("TaskStartDate").toString());
+//            viewHolder.enddate.setText(dataList.get(position).get("TaskEndDate").toString());
+//            viewHolder.jobOrder.setText(dataList.get(position).get("JobOrder").toString());
+            viewHolder.isSub.setText(dataList.get(position).get("IsSub").toString());
             viewHolder.statusId.setText(dataList.get(position).get("StatusId").toString());
             viewHolder.id.setText(dataList.get(position).get("TaskId").toString());
-            viewHolder.subId.setText(dataList.get(position).get("SubTaskId").toString());
+//            viewHolder.subId.setText(dataList.get(position).get("SubTaskId").toString());
             return convertView;
         }
     }
@@ -629,6 +644,7 @@ public class WorkerActivity extends AppCompatActivity {
             super.onPreExecute();
 
             dataList.clear();
+            popupList.clear();
             empty.setVisibility(View.GONE);
             // Showing progress dialog
             pDialog = new ProgressDialog(WorkerActivity.this);
@@ -643,56 +659,147 @@ public class WorkerActivity extends AppCompatActivity {
             String url;
             String check = arg0[0];
 
-            // Creating service handler class instance
-            ServiceHandler sh = new ServiceHandler();
-
             if (check.equals("User")) {
-                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/1/1";
-            } else {
-                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/1/1";
-            }
 
-            // Making a request to url and getting response
-            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+                HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
+                request.setHeader("Accept", "application/json");
+                request.setHeader("Content-type", "application/json");
 
-            Log.d("Response: ", "> " + jsonStr);
-
-            if (jsonStr != null) {
-
+                // Build JSON string
+                JSONStringer userJson = null;
                 try {
-
-                    tasks = new JSONArray(jsonStr);
-
-                    // looping through All Contacts
-                    for (int i = 0; i < tasks.length(); i++) {
-                        JSONObject c = tasks.getJSONObject(i);
-
-                        String id = c.getString("TaskId");
-                        String desc = c.getString("Description");
-                        String comments = c.getString("Comments");
-                        String statusId = c.getString("StatusId");
-                        String priority = c.getString("Priority");
-                        String subId = c.getString("SubTaskId");
-
-                        //tmp hashmap for single contact
-                        HashMap<String, Object> contact = new HashMap<String, Object>();
-
-                        //adding each child node to HashMap key => value
-                        contact.put("TaskId", id);
-                        contact.put("Description", desc);
-                        contact.put("StatusId", statusId);
-                        contact.put("Comments", comments);
-                        contact.put("SubTaskId", subId);
-                        contact.put("Priority", priority);
-                        popupList.add(desc);
-                        dataList.add(contact);
-
-                    }
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("taskDetails")
+                            .object()
+                            .key("TaskDetailsId").value(0)
+                            .key("TaskId").value(0)
+                            .key("AssignedToId").value(worker_id)
+                            .key("AssignedById").value(0)
+                            .key("IsSubTask").value(1)
+                            .key("StatusId").value(0)
+                            .endObject()
+                            .endObject();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
+                Log.d("Json", String.valueOf(userJson));
+                StringEntity entity = null;
+                try {
+                    entity = new StringEntity(userJson.toString(), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                entity.setContentType("application/json");
+
+                request.setEntity(entity);
+
+                // Send request to WCF service
+                DefaultHttpClient httpClient = new DefaultHttpClient();
+                try {
+                    ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                    String response = httpClient.execute(request, responseHandler);
+                    Log.d("res", response);
+
+                    if (response != null) {
+
+                        try {
+
+                            JSONObject json1 = new JSONObject(response);
+                            tasks = json1.getJSONArray("TaskAssignedResult");
+
+                            // Looping through Array
+                            for (int i = 0; i < tasks.length(); i++) {
+                                JSONObject c = tasks.getJSONObject(i);
+
+                                String id = c.getString("TaskId");
+                                String name = c.getString("TaskName");
+//                            String desc = c.getString("Description");
+                                String comments = c.getString("Comments");
+                                String isSub = c.getString("IsSubTask");
+//                            String priority = c.getString("Priority");
+                                String createdBy = c.getString("CreatedBy");
+                                int statusId = c.getInt("StatusId");
+//                            int subId = c.getInt("SubTaskId");
+
+                                //adding each child node to HashMap key => value
+                                HashMap<String, Object> taskMap = new HashMap<String, Object>();
+//                            taskMap.put("Description", "Description : " + desc);
+                                taskMap.put("CreatedBy", createdBy);
+                                taskMap.put("TaskId", id);
+                                taskMap.put("TaskName", name);
+                                taskMap.put("IsSub", isSub);
+//                            taskMap.put("SubTaskId", subId);
+                                taskMap.put("StatusId", statusId);
+                                taskMap.put("Comments", comments);
+//                            contact.put("Priority", "Priority : " + priority);
+
+                                dataList.add(taskMap);
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e("ServiceHandler", "Couldn't get any data from the url");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } else {
-                Log.e("ServiceHandler", "Couldn't get any data from the url");
+
+                // Creating service handler class instance
+                ServiceHandler sh = new ServiceHandler();
+                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/0/1/1";
+                Log.d("Url", url);
+
+                // Making a request to url and getting response
+                String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+                Log.d("Response: ", "> " + jsonStr);
+
+                if (jsonStr != null) {
+                    try {
+
+                        tasks = new JSONArray(jsonStr);
+
+                        // looping through All Contacts
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject c = tasks.getJSONObject(i);
+
+                            String id = c.getString("TaskId");
+                            String createdBy = c.getString("CreatedBy");
+                            String name = c.getString("SubTaskName");
+                            String desc = c.getString("Description");
+                            String comments = c.getString("Comments");
+                            String statusId = c.getString("StatusId");
+                            String priority = c.getString("Priority");
+                            String subId = c.getString("SubTaskId");
+
+                            //tmp hashmap for single contact
+                            HashMap<String, Object> taskMap = new HashMap<String, Object>();
+
+                            //adding each child node to HashMap key => value
+                            taskMap.put("TaskId", id);
+                            taskMap.put("CreatedBy", createdBy);
+                            taskMap.put("SubTaskName", name);
+                            taskMap.put("Description", desc);
+                            taskMap.put("StatusId", statusId);
+                            taskMap.put("Comments", comments);
+                            taskMap.put("SubTaskId", subId);
+                            taskMap.put("Priority", priority);
+                            popupList.add(name);
+                            dataList.add(taskMap);
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("ServiceHandler", "Couldn't get any data from the url");
+                }
             }
 
             return check;
@@ -706,10 +813,10 @@ public class WorkerActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            if(result.equals("User")) {
+            if (result.equals("User")) {
                 cardAdapter = new CustomAdapter(WorkerActivity.this, R.layout.task_list, dataList);
                 added_list.setAdapter(cardAdapter);
-            }else{
+            } else {
                 CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
                 AlertDialog.Builder builderSingle = new AlertDialog.Builder(WorkerActivity.this);
                 builderSingle.setTitle("Select A Task");
@@ -726,7 +833,7 @@ public class WorkerActivity extends AppCompatActivity {
                 builderSingle.setItems(items, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String id = dataList.get(which).get("TaskId").toString();
+                        String id = dataList.get(which).get("SubTaskId").toString();
 //                        String statusId = dataList.get(which).get("StatusId").toString();
                         String comments = dataList.get(which).get("Comments").toString();
                         String createdBy = dataList.get(which).get("CreatedBy").toString();

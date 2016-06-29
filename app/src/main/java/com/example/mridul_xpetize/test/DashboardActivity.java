@@ -117,7 +117,6 @@ public class DashboardActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-
     public boolean onCreateOptionsMenu(Menu menu) {
 
         //inflate menu

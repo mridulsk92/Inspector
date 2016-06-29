@@ -1,50 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:padding="6dp"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <TextView
+        android:id="@+id/subName"
+        android:textStyle="bold"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:text="SubTask Name"
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/comments"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/desc"
-        android:layout_toEndOf="@+id/jobOrder"
-        android:layout_toRightOf="@+id/jobOrder"
         android:padding="1dp"
-        android:text="Comments" />
+        android:text="Comments"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="1dp"
+        android:text="Description"
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/jobOrder"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:padding="1dp"
+        android:padding="5dp"
         android:text="Location"
         android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/taskname"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/jobOrder"
-        android:layout_toEndOf="@+id/jobOrder"
-        android:layout_toRightOf="@+id/jobOrder"
-        android:text="SubTask Name - "
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/desc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_gravity="center_horizontal"
-        android:layout_toEndOf="@+id/taskname"
-        android:layout_toRightOf="@+id/taskname"
-        android:paddingLeft="1dp"
-        android:text="Description" />
 
     <TextView
         android:id="@+id/statusId"
@@ -56,14 +49,20 @@
 
     <TextView
         android:id="@+id/priority"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/comments"
+        android:padding="1dp"
         android:text="Priority"
-        android:paddingLeft="1dp"
-        android:visibility="visible" />
+        android:textSize="14sp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/isSub"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="1dp"
+        android:text="IsSubTask"
+        android:textSize="14sp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/task_id"
@@ -71,6 +70,14 @@
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:text="Priority"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/createdBy"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="CreatedBy"
         android:visibility="gone" />
 
     <TextView
@@ -97,5 +104,4 @@
         android:text="End Date"
         android:visibility="gone" />
 
-</RelativeLayout>
-
+</LinearLayout>

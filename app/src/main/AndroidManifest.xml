@@ -9,7 +9,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="Inspector EagleXpetize"
+        android:label="Inspector"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity" />
@@ -18,7 +18,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.mridul_xpetize.test.TaskActivity" />
         </activity>
-        <activity android:name=".SplashActivity">
+        <activity
+            android:name=".SplashActivity"
+            android:label="Inspector EagleXpetize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,6 +32,7 @@
         <activity android:name=".DashboardActivity" />
         <activity android:name=".WorkerListActivity" />
         <activity android:name=".NotificationActivity" />
+        <activity android:name=".TaskDetailsActivity"></activity>
     </application>
 
 </manifest>

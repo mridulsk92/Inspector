@@ -1,6 +1,7 @@
 package com.example.mridul_xpetize.test;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.AsyncTask;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -23,11 +25,14 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.SimpleAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mikepenz.materialdrawer.AccountHeader;
@@ -52,18 +57,30 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+
+    ImageButton startCal, endCal;
+    ArrayList<String> spinnerData = new ArrayList<String>();
+    Calendar myCalendarS, myCalendarE;
+    EditText startDate, endDate;
+    int priority;
+    String insp_id;
+
+    String user_id;
     private Drawer result = null;
 
-    String id_task;
     ListView task_list;
     ProgressDialog pDialog;
 
@@ -88,11 +105,14 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle("Inspector");
 
+        //Get Preference Values
+        pref = new PreferencesHelper(MainActivity.this);
+        user_id = pref.GetPreferences("UserId");
+        final String acc_name = pref.GetPreferences("UserName");
+
         //Initialise Views
         task_list = (ListView) findViewById(R.id.listView_tasks);
         dataList = new ArrayList<HashMap<String, Object>>();
-        pref = new PreferencesHelper(MainActivity.this);
-        String acc_name = pref.GetPreferences("UserName");
 
         //Adding Header to the Navigation Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -120,6 +140,44 @@ public class MainActivity extends AppCompatActivity {
         //Add ToggleButton to ToolBar
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
+//onClick of Floating Button
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //Show DialogBox
+                final android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+                alertDialogBuilder.setTitle("Select a Task");
+                final CharSequence items[] = {"Select Pre Defined tasks", "Create Tasks"};
+                alertDialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        if (which == 0) {
+                            //Select Pre defined tasks
+                            new GetTaskList().execute("All");
+                        } else {
+                            //Create tasks
+                            AddTask();
+                        }
+                    }
+                });
+
+                alertDialogBuilder.setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+
+                            }
+                        });
+
+                android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+
+            }
+        });
 
         //ListView onItem Click
         task_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -127,14 +185,500 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 //Get TextView values and assign to String
-                id_task = ((TextView) view.findViewById(R.id.task_id)).getText().toString();
+                String idTask = ((TextView) view.findViewById(R.id.task_id)).getText().toString();
+                String name = ((TextView) view.findViewById(R.id.taskname)).getText().toString();
+                String comments = ((TextView) view.findViewById(R.id.comments)).getText().toString();
+                String desc = ((TextView) view.findViewById(R.id.desc)).getText().toString();
+                String assignedBy = ((TextView) view.findViewById(R.id.assigned)).getText().toString();
+                String status = ((TextView) view.findViewById(R.id.status)).getText().toString();
 
-                //Show SubTasks in AlertDialogBox
+                Intent i = new Intent(MainActivity.this, TaskDetailsActivity.class);
+                i.putExtra("Id", idTask);
+                i.putExtra("Name", name);
+                i.putExtra("Status", status);
+                i.putExtra("Comments", comments);
+                i.putExtra("Description", desc);
+                i.putExtra("AssignedBy", assignedBy);
+                startActivity(i);
+
+            }
+        });
+
+        //Load Tasks
+        new GetTaskList().execute("User");
+    }
+
+    private void AddTask() {
+
+        LayoutInflater factory = LayoutInflater.from(this);
+        final View addView = factory.inflate(
+                R.layout.addtask_dialog, null);
+        final AlertDialog addDialog = new AlertDialog.Builder(this).create();
+        addDialog.setView(addView);
+
+        //Initialise
+        startCal = (ImageButton) addView.findViewById(R.id.imageButton_startDate);
+        endCal = (ImageButton) addView.findViewById(R.id.imageButton_endDate);
+        myCalendarS = Calendar.getInstance();
+        myCalendarE = Calendar.getInstance();
+        final EditText task_name = (EditText) addView.findViewById(R.id.editText_name);
+        final EditText editDescription = (EditText) addView.findViewById(R.id.editText_desc);
+        final Spinner typeSpinner = (Spinner) addView.findViewById(R.id.spinner);
+        startDate = (EditText) addView.findViewById(R.id.editText_start);
+        endDate = (EditText) addView.findViewById(R.id.editText_end);
+        final EditText loc = (EditText) addView.findViewById(R.id.editText_location);
+        final EditText comments = (EditText) addView.findViewById(R.id.editText_comments);
+
+        //Add button onClick
+        Button addTask = (Button) addView.findViewById(R.id.button_add);
+        addTask.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+                String desc = editDescription.getText().toString();
+                String name_st = task_name.getText().toString();
+                String stdate = startDate.getText().toString();
+                String enddate = endDate.getText().toString();
+                String comments_st = comments.getText().toString();
+                String loc_st = loc.getText().toString();
+                if (typeSpinner.getSelectedItem().equals("High")) {
+                    priority = 1;
+                } else if (typeSpinner.getSelectedItem().equals("Medium")) {
+                    priority = 2;
+                } else if (typeSpinner.getSelectedItem().equals("Low")) {
+                    priority = 3;
+                } else {
+                    priority = 1;
+                }
+
+                addDialog.dismiss();
+                String createdBy = user_id;
+                ArrayList<String> passing = new ArrayList<String>();
+                passing.add(desc);
+                passing.add(name_st);
+                passing.add(loc_st);
+                passing.add(comments_st);
+                passing.add(createdBy);
+                new PostTasks().execute(passing);
+            }
+        });
+
+        //Date Picker
+        final DatePickerDialog.OnDateSetListener dateStart = new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                  int dayOfMonth) {
+                // TODO Auto-generated method stub
+                myCalendarS.set(Calendar.YEAR, year);
+                myCalendarS.set(Calendar.MONTH, monthOfYear);
+                myCalendarS.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                updateLabelStart();
+            }
+        };
+
+        final DatePickerDialog.OnDateSetListener dateEnd = new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                  int dayOfMonth) {
+                // TODO Auto-generated method stub
+                myCalendarE.set(Calendar.YEAR, year);
+                myCalendarE.set(Calendar.MONTH, monthOfYear);
+                myCalendarE.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                updateLabelEnd();
+            }
+        };
+
+        startCal.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                new DatePickerDialog(MainActivity.this, dateStart, myCalendarS
+                        .get(Calendar.YEAR), myCalendarS.get(Calendar.MONTH),
+                        myCalendarS.get(Calendar.DAY_OF_MONTH)).show();
+            }
+        });
+
+        endCal.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                new DatePickerDialog(MainActivity.this, dateEnd, myCalendarE
+                        .get(Calendar.YEAR), myCalendarE.get(Calendar.MONTH),
+                        myCalendarE.get(Calendar.DAY_OF_MONTH)).show();
+            }
+        });
+
+        //Spinner
+        ArrayList<String> spinnerData = new ArrayList<String>();
+        spinnerData.add("Select Priority");
+        spinnerData.add("High");
+        spinnerData.add("Medium");
+        spinnerData.add("Low");
+
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, spinnerData);
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // attaching data adapter to spinner
+        typeSpinner.setAdapter(dataAdapter);
+
+        addDialog.show();
+    }
+
+    private class AssignTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(MainActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected ArrayList<String> doInBackground(ArrayList<String>... params) {
+
+            ArrayList<String> passed = params[0]; //get passed arraylist
+            String taskid_st = passed.get(0);
+            String userId_st = passed.get(1);
+            String createdBy_st = passed.get(2);
+            String status_st = passed.get(3);
+            String comments_st = passed.get(4);
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            // Build JSON string
+            JSONStringer userJson = null;
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("taskDetails")
+                        .object()
+                        .key("TaskId").value(taskid_st)
+                        .key("AssignedToId").value(insp_id)
+                        .key("AssignedById").value(createdBy_st)
+                        .key("StatusId").value(status_st)
+                        .key("IsSubTask").value(0)
+                        .key("Comments").value(comments_st)
+                        .key("CreatedBy").value(createdBy_st)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+                Log.d("res", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            new GetTaskList().execute("User");
+
+        }
+    }
+
+    private class PostTasks extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(MainActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected ArrayList<String> doInBackground(ArrayList<String>... passing) {
+
+
+            ArrayList<String> passed = passing[0]; //get passed arraylist
+            String desc = passed.get(0);
+            String name = passed.get(1);
+            String loc = passed.get(2);
+            String comments = passed.get(3);
+            String createdBy = passed.get(4);
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewTask");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            // Build JSON string
+            JSONStringer userJson = null;
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("task")
+                        .object()
+                        .key("TaskName").value(name)
+                        .key("Description").value(desc)
+                        .key("Location").value(loc)
+                        .key("StatusId").value("1")
+                        .key("Comments").value(comments)
+                        .key("CreatedBy").value(createdBy)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+                Log.d("res", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            new GetTaskList().execute("User");
+        }
+    }
+
+    private class GetTaskList extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            dataList.clear();
+            popupList.clear();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(MainActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... arg0) {
+
+            String check = arg0[0];
+
+            if (check.equals("User")) {
+
+                HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
+                request.setHeader("Accept", "application/json");
+                request.setHeader("Content-type", "application/json");
+
+                // Build JSON string
+                JSONStringer userJson = null;
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("taskDetails")
+                            .object()
+                            .key("TaskDetailsId").value(0)
+                            .key("TaskId").value(0)
+                            .key("AssignedToId").value(user_id)
+                            .key("AssignedById").value(0)
+                            .key("IsSubTask").value(0)
+                            .key("StatusId").value(0)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                Log.d("Json", String.valueOf(userJson));
+                StringEntity entity = null;
+                try {
+                    entity = new StringEntity(userJson.toString(), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                entity.setContentType("application/json");
+
+                request.setEntity(entity);
+
+                // Send request to WCF service
+                DefaultHttpClient httpClient = new DefaultHttpClient();
+                try {
+                    ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                    String response = httpClient.execute(request, responseHandler);
+                    Log.d("res", response);
+
+                    if (response != null) {
+
+                        try {
+
+                            JSONObject json1 = new JSONObject(response);
+                            tasks = json1.getJSONArray("TaskAssignedResult");
+
+                            for (int i = 0; i < tasks.length(); i++) {
+                                JSONObject c = tasks.getJSONObject(i);
+
+                                String id = c.getString("TaskId");
+                                String name = c.getString("TaskName");
+                                String comments = c.getString("Comments");
+                                String assignedBy = c.getString("AssignedByName");
+//                            String desc = c.getString("Description");
+//                            String loc = c.getString("Location");
+
+                                // adding each child node to HashMap key => value
+                                HashMap<String, Object> taskMap = new HashMap<String, Object>();
+
+//                            taskMap.put("Description", desc);
+                                taskMap.put("TaskName", name);
+                                taskMap.put("TaskId", id);
+                                taskMap.put("AssignedByName", "Assigned By : " + assignedBy);
+                                taskMap.put("Comments", comments);
+//                            taskMap.put("Location", loc);
+                                dataList.add(taskMap);
+
+//                                JSONArray subTasks = c.getJSONArray("SubTasks");
+//                                //Loop through SubTasks
+//                                for (int j = 0; j < subTasks.length(); j++) {
+//
+//                                    JSONObject a = subTasks.getJSONObject(j);
+//                                    String sub_id = a.getString("SubTaskId");
+//                                    String sub_desc = a.getString("Description");
+//
+//                                    //Load Description and Id's in List
+//                                    popupList.add(sub_desc);
+//                                    popupListId.add(sub_id);
+//                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e("ServiceHandler", "Couldn't get any data from the url");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+
+                ServiceHandler sh = new ServiceHandler();
+                String url = getString(R.string.url) + "EagleXpetizeService.svc/Tasks/0/0/1";
+                Log.d("URL", url);
+
+                // Making a request to url and getting response
+                String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+
+                Log.d("Response: ", "> " + jsonStr);
+
+                if (jsonStr != null) {
+
+                    try {
+
+                        tasks = new JSONArray(jsonStr);
+                        // looping through Array
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject c = tasks.getJSONObject(i);
+
+                            String id = c.getString("TaskId");
+                            String name = c.getString("TaskName");
+                            String comments = c.getString("Comments");
+                            String desc = c.getString("Description");
+                            String loc = c.getString("Location");
+                            String assigned = c.getString("CreatedBy");
+
+                            // adding each child node to HashMap key => value
+                            HashMap<String, Object> taskMap = new HashMap<String, Object>();
+
+                            taskMap.put("Description", desc);
+                            taskMap.put("TaskName", name);
+                            taskMap.put("TaskId", id);
+                            taskMap.put("Comments", comments);
+                            taskMap.put("Location", loc);
+                            taskMap.put("CreatedBy", assigned);
+                            popupList.add(name);
+                            dataList.add(taskMap);
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("ServiceHandler", "Couldn't get any data from the url");
+                }
+            }
+
+            return check;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            if (result.equals("User")) {
+                cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, dataList);
+                task_list.setAdapter(cardAdapter);
+            } else {
+
                 CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
                 AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
-                builderSingle.setTitle("Select A SubTask");
+                builderSingle.setTitle("Select A Task");
 
-                //Cancel Button on AlertDialogBox
                 builderSingle.setNegativeButton(
                         "Cancel",
                         new DialogInterface.OnClickListener() {
@@ -144,24 +688,26 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
 
-                //Load SubTasks
                 builderSingle.setItems(items, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
-                        //Send selected Id's to TaskActivity
-                        Intent i = new Intent(MainActivity.this, TaskActivity.class);
-                        i.putExtra("SubTaskId", popupListId.get(which));
-                        i.putExtra("TaskId", id_task);
-                        startActivity(i);
+                        String id = dataList.get(which).get("TaskId").toString();
+//                        String statusId = dataList.get(which).get("StatusId").toString();
+                        String comments = dataList.get(which).get("Comments").toString();
+                        String createdBy = dataList.get(which).get("CreatedBy").toString();
+                        ArrayList<String> passing = new ArrayList<String>();
+                        passing.add(id);
+                        passing.add(user_id);
+                        passing.add(createdBy);
+                        passing.add("1");
+                        passing.add(comments);
+                        passing.add(createdBy);
+                        new AssignTask().execute(passing);
                     }
                 });
                 builderSingle.show();
             }
-        });
-
-        //Load Tasks
-        new GetTaskList().execute();
+        }
     }
 
     private class CustomAdapter extends ArrayAdapter<HashMap<String, Object>> {
@@ -210,140 +756,34 @@ public class MainActivity extends AppCompatActivity {
             viewHolder.taskName.setText(dataList.get(position).get("TaskName").toString());
             viewHolder.id.setText(dataList.get(position).get("TaskId").toString());
             viewHolder.assignedBy.setText(dataList.get(position).get("AssignedByName").toString());
-            viewHolder.desc.setText(dataList.get(position).get("TaskDescription").toString());
+//            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
             viewHolder.comments.setText(dataList.get(position).get("Comments").toString());
 //            viewHolder.loc.setText(dataList.get(position).get("Location").toString());
             return convertView;
         }
     }
 
-    private class GetTaskList extends AsyncTask<Void, Void, Void> {
+    private void updateLabelStart() {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+        String myFormat = "yyyy/MM/dd";
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
+        startDate.setText(sdf.format(myCalendarS.getTime()));
+    }
 
-            dataList.clear();
-            // Showing progress dialog
-            pDialog = new ProgressDialog(MainActivity.this);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
-        }
+    private void updateLabelEnd() {
 
-        @Override
-        protected Void doInBackground(Void... arg0) {
+        String myFormat = "yyyy/MM/dd";
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
+        endDate.setText(sdf.format(myCalendarE.getTime()));
+    }
 
-            String user_id = pref.GetPreferences("UserId");
+    @Override
+    public void onContentChanged() {
+        super.onContentChanged();
 
-            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
-            request.setHeader("Accept", "application/json");
-            request.setHeader("Content-type", "application/json");
-
-            // Build JSON string
-            JSONStringer userJson = null;
-            try {
-                userJson = new JSONStringer()
-                        .object()
-                        .key("taskDetails")
-                        .object()
-                        .key("TaskDetailsId").value(0)
-                        .key("TaskId").value(0)
-                        .key("AssignedToId").value(user_id)
-                        .key("AssignedById").value(0)
-                        .key("IsSubTask").value(0)
-                        .key("StatusId").value(0)
-                        .endObject()
-                        .endObject();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            Log.d("Json", String.valueOf(userJson));
-            StringEntity entity = null;
-            try {
-                entity = new StringEntity(userJson.toString(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-
-            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-            entity.setContentType("application/json");
-
-            request.setEntity(entity);
-
-            // Send request to WCF service
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            try {
-                ResponseHandler<String> responseHandler = new BasicResponseHandler();
-                String response = httpClient.execute(request, responseHandler);
-                Log.d("res", response);
-
-                if (response != null) {
-
-                    try {
-
-                        JSONObject json1 = new JSONObject(response);
-                        tasks = json1.getJSONArray("TaskAssignedResult");
-
-                        for (int i = 0; i < tasks.length(); i++) {
-                            JSONObject c = tasks.getJSONObject(i);
-
-                            String id = c.getString("TaskId");
-                            String name = c.getString("TaskName");
-                            String comments = c.getString("Comments");
-                            String assignedBy = c.getString("AssignedByName");
-                            String desc = c.getString("TaskDescription");
-//                            String loc = c.getString("Location");
-
-                            // adding each child node to HashMap key => value
-                            HashMap<String, Object> taskMap = new HashMap<String, Object>();
-
-                            taskMap.put("TaskDescription", desc);
-                            taskMap.put("TaskName", name);
-                            taskMap.put("TaskId", id);
-                            taskMap.put("AssignedByName", "Assigned By : " + assignedBy);
-                            taskMap.put("Comments", comments);
-//                            taskMap.put("Location", loc);
-                            dataList.add(taskMap);
-
-//                            JSONArray subTasks = c.getJSONArray("SubTasks");
-//                            //Loop through SubTasks
-//                            for (int j = 0; j < subTasks.length(); j++) {
-//
-//                                JSONObject a = subTasks.getJSONObject(j);
-//                                String sub_id = a.getString("SubTaskId");
-//                                String sub_desc = a.getString("Description");
-//
-//                                //Load Description and Id's in List
-//                                popupList.add(sub_desc);
-//                                popupListId.add(sub_id);
-//                            }
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.e("ServiceHandler", "Couldn't get any data from the url");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            // Dismiss the progress dialog
-            if (pDialog.isShowing())
-                pDialog.dismiss();
-
-            //Display data in ListView
-            cardAdapter = new CustomAdapter(MainActivity.this, R.layout.task_list, dataList);
-            task_list.setAdapter(cardAdapter);
-        }
+        View empty = findViewById(R.id.empty);
+        ListView list = (ListView) findViewById(R.id.listView_tasks);
+        list.setEmptyView(empty);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {

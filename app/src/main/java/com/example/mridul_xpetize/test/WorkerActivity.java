@@ -727,7 +727,7 @@ public class WorkerActivity extends AppCompatActivity {
                             .key("AssignedToId").value(worker_id)
                             .key("AssignedById").value(0)
                             .key("IsSubTask").value(1)
-                            .key("StatusId").value(0)
+                            .key("StatusId").value(1)
                             .endObject()
                             .endObject();
                 } catch (JSONException e) {

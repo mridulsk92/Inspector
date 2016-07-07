@@ -56,14 +56,11 @@
         android:id="@+id/imageButton_workers"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/imageButton_myTasks"
-        android:layout_alignStart="@+id/imageButton_myTasks"
-        android:layout_below="@+id/textView7"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="5dp"
         android:background="@null"
-        android:src="@drawable/profile" />
+        android:src="@drawable/profile"
+        android:layout_below="@+id/textView7"
+        android:layout_alignLeft="@+id/imageButton_approval"
+        android:layout_alignStart="@+id/imageButton_approval" />
 
     <TextView
         android:id="@+id/textView7"
@@ -84,5 +81,25 @@
         android:layout_alignLeft="@+id/textView7"
         android:layout_alignStart="@+id/textView7" />
 
+    <ImageButton
+        android:id="@+id/imageButton_approval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView5"
+        android:layout_alignStart="@+id/textView5"
+        android:layout_below="@+id/textView8"
+        android:layout_marginLeft="15dp"
+        android:background="@null"
+        android:src="@drawable/ic_approval" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2"
+        android:layout_below="@+id/imageButton_approval"
+        android:text="Approve / Reject"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>

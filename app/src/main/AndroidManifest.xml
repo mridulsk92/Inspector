@@ -32,7 +32,15 @@
         <activity android:name=".DashboardActivity" />
         <activity android:name=".WorkerListActivity" />
         <activity android:name=".NotificationActivity" />
-        <activity android:name=".TaskDetailsActivity"></activity>
+        <activity android:name=".TaskDetailsActivity" />
+        <activity
+            android:name=".ApprovalActivity"
+            android:noHistory="true">
+        </activity>
+        <activity
+            android:name=".ApprovalDetailsActivity"
+            android:noHistory="true">
+        </activity>
     </application>
 
 </manifest>

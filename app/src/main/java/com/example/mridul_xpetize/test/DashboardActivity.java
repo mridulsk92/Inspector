@@ -3,6 +3,7 @@ package com.example.mridul_xpetize.test;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.Image;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -64,6 +65,17 @@ public class DashboardActivity extends AppCompatActivity {
         //Initialise
         myTasks = (ImageButton)findViewById(R.id.imageButton_myTasks);
         workers = (ImageButton)findViewById(R.id.imageButton_workers);
+        ImageButton approvedTask = (ImageButton)findViewById(R.id.imageButton_approval);
+
+        //onClick of approvedTask button
+        approvedTask.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent i = new Intent(DashboardActivity.this,ApprovalActivity.class);
+                startActivity(i);
+            }
+        });
 
         //onClick of myTasks
         myTasks.setOnClickListener(new View.OnClickListener() {

@@ -98,6 +98,30 @@
         android:visibility="gone" />
 
     <TextView
+        android:id="@+id/assignedId"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="CreatedBy"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/assignedTo"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="AssignedTo"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/detailsId"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="CreatedBy"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/subtask_id"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

@@ -35,12 +35,24 @@
         <activity android:name=".TaskDetailsActivity" />
         <activity
             android:name=".ApprovalActivity"
-            android:noHistory="true">
-        </activity>
+            android:noHistory="true" />
         <activity
             android:name=".ApprovalDetailsActivity"
-            android:noHistory="true">
-        </activity>
+            android:noHistory="true" />
+
+        <receiver
+            android:name=".NetworkReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".PostService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

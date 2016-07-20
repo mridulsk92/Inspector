@@ -3,6 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/dashboard_layout"
+    android:layout_weight="2"
     android:layout_height="match_parent"
     tools:context="com.example.mridul_xpetize.test.DashboardActivity">
 
@@ -101,5 +103,16 @@
         android:layout_below="@+id/imageButton_approval"
         android:text="Approve / Reject"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <ListView
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView_hidden_notification"
+        android:visibility="gone"
+        android:background="@color/white"
+        android:layout_alignTop="@+id/imageButton_myTasks"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

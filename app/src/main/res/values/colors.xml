@@ -6,4 +6,7 @@
     <color name="text_color">#000000</color>
     <color name="colorAccent">#00c6d7</color>
     <color name="hamburgerIconColor">#FFFFFF</color>
+    <color name="white">#ffffff</color>
+    <color name="action_bar_icon_color_disabled">#ffffff</color>
+    <color name="gray">#15dccdd2</color>
 </resources>

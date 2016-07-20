@@ -89,5 +89,16 @@
             android:src="@android:drawable/ic_input_add"
             android:tint="@color/cardview_light_background" />
 
+        <ListView
+            android:layout_width="170dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/listView_hidden_notification"
+            android:visibility="gone"
+            android:background="@color/white"
+            android:layout_weight="1"
+            android:layout_alignTop="@+id/textView_inspector"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
     </RelativeLayout>
 </RelativeLayout>

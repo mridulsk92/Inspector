@@ -6,7 +6,12 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -25,11 +30,13 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -70,6 +77,11 @@ public class WorkerActivity extends AppCompatActivity {
     ImageButton startCal, endCal;
     PreferencesHelper pref;
     View empty;
+    MenuItem menuItem;
+    int count;
+    ListView hidden_not;
+    List<Integer> posList = new ArrayList<Integer>();
+    ArrayList<Integer> savedList = new ArrayList<Integer>();
 
     String desc, stdate, enddate, worker_id, comments_st, order_st, name_st;
     int priority;
@@ -88,8 +100,10 @@ public class WorkerActivity extends AppCompatActivity {
     List<String> popupListId = new ArrayList<String>();
 
     ProgressDialog pDialog;
+    ProgressDialog pDialogN;
 
     ArrayList<HashMap<String, Object>> dataList;
+    ArrayList<HashMap<String, Object>> notiList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,14 +195,42 @@ public class WorkerActivity extends AppCompatActivity {
         worker_id = i.getStringExtra("id");
 
         //Initialize
+        hidden_not = (ListView) findViewById(R.id.listView_hidden_notification);
         empty = findViewById(R.id.empty);
         workerName = (TextView) findViewById(R.id.textView_inspector);
         task_list = (ListView) findViewById(R.id.listView_task);
         task_list.setEmptyView(findViewById(android.R.id.empty));
         dataList = new ArrayList<>();
+        notiList = new ArrayList<>();
         empty = (TextView) findViewById(R.id.empty);
         added_list = (ListView) findViewById(R.id.listView_task);
         workerName.setText(name);
+
+        //Get Saved List
+        TinyDB db = new TinyDB(WorkerActivity.this);
+        savedList = db.getListInt("Positions");
+
+        //onItemClick of ListView item
+        hidden_not.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                count--;
+                if (count <= 0) {
+                    count = 0;
+                }
+
+                menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
+
+                parent.getChildAt(position).setBackgroundColor(Color.TRANSPARENT);
+                String desc = ((TextView) view.findViewById(R.id.textview_noti)).getText().toString();
+                String byId = ((TextView) view.findViewById(R.id.noti_by)).getText().toString();
+                Intent i = new Intent(WorkerActivity.this, NotificationActivity.class);
+                i.putExtra("Description", desc);
+                i.putExtra("ById", byId);
+                startActivity(i);
+            }
+        });
 
         //onItemClick of ListView item
         task_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -237,6 +279,8 @@ public class WorkerActivity extends AppCompatActivity {
 
         //Show new Subtask List
         new GetSubTaskList().execute("User");
+
+        new GetNotiList().execute();
 
     }
 
@@ -765,7 +809,6 @@ public class WorkerActivity extends AppCompatActivity {
                             for (int i = 0; i < tasks.length(); i++) {
                                 JSONObject c = tasks.getJSONObject(i);
 
-
                                 String id = c.getString("TaskId");
                                 String name = c.getString("TaskName");
                                 String desc = c.getString("TaskDescription");
@@ -895,12 +938,29 @@ public class WorkerActivity extends AppCompatActivity {
                         passing.add("1");
                         passing.add(comments);
                         passing.add(createdBy);
-                        new AssignTask().execute(passing);
+                        if (isNetworkAvailable()) {
+                            new AssignTask().execute(passing);
+                        } else {
+                            Toast.makeText(WorkerActivity.this, "No Internet Connection. Data stored locally", Toast.LENGTH_SHORT).show();
+                            SQLite entry = new SQLite(WorkerActivity.this);
+                            entry.open();
+                            entry.createEntryAssigned(id, worker_id, createdBy, "1", "1", comments, createdBy);
+                            String a = entry.getCountAssigned();
+                            entry.close();
+                            Log.d("Assigned Count :", a);
+                        }
                     }
                 });
                 builderSingle.show();
             }
         }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     private void updateLabelStart() {
@@ -926,35 +986,221 @@ public class WorkerActivity extends AppCompatActivity {
         list.setEmptyView(empty);
     }
 
-    public boolean onCreateOptionsMenu(Menu menu) {
+    private class CustomAdapterNot extends ArrayAdapter<HashMap<String, Object>> {
 
+        public CustomAdapterNot(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
+
+            //let android do the initializing :)
+            super(context, textViewResourceId, Strings);
+        }
+
+        //class for caching the views in a row
+        private class ViewHolder {
+
+            TextView not, isRead, byName, taskName;
+            LinearLayout noti_linear;
+        }
+
+        //Initialise
+        ViewHolder viewHolder;
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+
+            if (convertView == null) {
+
+                //inflate the custom layout
+                convertView = inflater.from(parent.getContext()).inflate(R.layout.notification_layout, parent, false);
+                viewHolder = new ViewHolder();
+
+                //cache the views
+                viewHolder.taskName = (TextView) convertView.findViewById(R.id.noti_task);
+                viewHolder.byName = (TextView) convertView.findViewById(R.id.noti_by);
+                viewHolder.noti_linear = (LinearLayout) convertView.findViewById(R.id.not_layout);
+                viewHolder.not = (TextView) convertView.findViewById(R.id.textview_noti);
+                viewHolder.isRead = (TextView) convertView.findViewById(R.id.textview_isRead);
+
+                //link the cached views to the convertview
+                convertView.setTag(viewHolder);
+            } else
+                viewHolder = (ViewHolder) convertView.getTag();
+
+            //set the data to be displayed
+            viewHolder.byName.setText(notiList.get(position).get("UserName").toString());
+            viewHolder.taskName.setText(notiList.get(position).get("TaskName").toString());
+            viewHolder.not.setText(notiList.get(position).get("Description").toString());
+            viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
+
+//            for (int i = 0; i < savedList.size(); i++) {
+//                Log.d("Test Custom", String.valueOf(savedList.get(i)));
+//                if (position == savedList.get(i)) {
+//                    viewHolder.noti_linear.setBackgroundColor(Color.TRANSPARENT);
+//                } else {
+//                    viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
+//                }
+//            }
+
+            return convertView;
+        }
+    }
+
+    private class GetNotiList extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            dataList.clear();
+            // Showing progress dialog
+            pDialogN = new ProgressDialog(WorkerActivity.this);
+            pDialogN.setMessage("Please wait...");
+            pDialogN.setCancelable(false);
+            pDialogN.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            String user_id = pref.GetPreferences("UserId");
+
+            // Creating service handler class instance
+            ServiceHandler sh = new ServiceHandler();
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/Notifications/" + user_id + "/1";
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            Log.d("Url", url);
+            Log.d("Response: ", "> " + jsonStr);
+            if (jsonStr != null) {
+
+                try {
+
+                    JSONArray tasks = new JSONArray(jsonStr);
+
+                    for (int i = 0; i < tasks.length(); i++) {
+                        JSONObject c = tasks.getJSONObject(i);
+
+                        String id = c.getString("TaskId");
+                        String username = c.getString("UserName");
+                        String taskName = c.getString("TaskName");
+                        String description = c.getString("Description");
+                        String byId = c.getString("ById");
+                        String toId = c.getString("ToId");
+                        String isNew = c.getString("IsNew");
+
+                        // adding each child node to HashMap key => value
+                        HashMap<String, Object> taskMap = new HashMap<String, Object>();
+                        taskMap.put("TaskId", id);
+                        taskMap.put("UserName", username);
+                        taskMap.put("TaskName", taskName);
+                        taskMap.put("Description", description);
+                        taskMap.put("ById", byId);
+                        taskMap.put("ToId", toId);
+                        taskMap.put("IsNew", isNew);
+                        notiList.add(taskMap);
+                        popupList.add(description);
+
+                    }
+                    count = notiList.size();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.e("ServiceHandler", "Couldn't get any data from the url");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (pDialogN.isShowing())
+                pDialogN.dismiss();
+
+            // initialize pop up window
+            menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
+            CustomAdapterNot notAdapter = new CustomAdapterNot(WorkerActivity.this, R.layout.popup_layout, notiList);
+            hidden_not.setAdapter(notAdapter);
+        }
+    }
+
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        super.onCreateOptionsMenu(menu);
         //inflate menu
         getMenuInflater().inflate(R.menu.menu_my, menu);
 
-        // Get the notifications MenuItem and LayerDrawable (layer-list)
-        MenuItem item_noti = menu.findItem(R.id.action_noti);
-        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
-
-        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        menuItem = menu.findItem(R.id.testAction);
+        menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
 
-
+                if (hidden_not.getVisibility() == View.VISIBLE) {
+                    hidden_not.setVisibility(View.GONE);
+                } else {
+                    hidden_not.setVisibility(View.VISIBLE);
+                }
                 return false;
             }
         });
 
-        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-
-                Intent i = new Intent(WorkerActivity.this, NotificationActivity.class);
-                startActivity(i);
-                return false;
-            }
-        });
+//        MenuItem item = menu.findItem(R.id.badge);
+//        MenuItemCompat.setActionView(item, R.layout.feed_update_count);
+//        View view = MenuItemCompat.getActionView(item);
+//        notifCount = (Button)view.findViewById(R.id.notif_count);
+//        notifCount.setText(String.valueOf(mNotifCount));
+//
+//        // Get the notifications MenuItem and LayerDrawable (layer-list)
+////        MenuItem item_noti = menu.findItem(R.id.action_noti);
+//        MenuItem item_logOut = menu.findItem(R.id.action_logOut);
+//
+//        item_logOut.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//
+//
+//                return false;
+//            }
+//        });
+//
+////        item_noti.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+////            @Override
+////            public boolean onMenuItemClick(MenuItem item) {
+////
+////                Intent i = new Intent(DashboardActivity.this, NotificationActivity.class);
+////                startActivity(i);
+////                return false;
+////            }
+////        });
 
         return true;
+    }
+
+    private Drawable buildCounterDrawable(int count, int backgroundImageId) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View view = inflater.inflate(R.layout.counter_menuitem_layout, null);
+        view.setBackgroundResource(backgroundImageId);
+
+        if (count == 0) {
+            View counterTextPanel = view.findViewById(R.id.rel_panel);
+            counterTextPanel.setVisibility(View.GONE);
+        } else {
+            TextView textView = (TextView) view.findViewById(R.id.count);
+            textView.setText("" + count);
+        }
+
+        view.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+
+        view.setDrawingCacheEnabled(true);
+        view.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
+        view.setDrawingCacheEnabled(false);
+
+        return new BitmapDrawable(getResources(), bitmap);
     }
 
 }

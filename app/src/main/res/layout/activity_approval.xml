@@ -64,7 +64,7 @@
         android:layout_alignRight="@+id/listView_task"
         android:layout_below="@+id/toolbar"
         android:gravity="center"
-        android:text="No Tasks Assigned" />
+        android:text="No Tasks For Approval" />
 
     <ListView
         android:id="@+id/listView_subtasks"
@@ -73,6 +73,16 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/toolbar"
-        android:layout_above="@+id/fab" />
+        android:layout_alignBottom="@+id/fab" />
+
+    <ListView
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView_hidden_notification"
+        android:background="@color/white"
+        android:visibility="gone"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/empty" />
 
 </RelativeLayout>

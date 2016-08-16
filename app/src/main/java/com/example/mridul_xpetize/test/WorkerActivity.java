@@ -65,6 +65,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -78,12 +79,14 @@ public class WorkerActivity extends AppCompatActivity {
     PreferencesHelper pref;
     View empty;
     MenuItem menuItem;
-    int count;
+    int count, response_json;
     ListView hidden_not;
     List<Integer> posList = new ArrayList<Integer>();
     ArrayList<Integer> savedList = new ArrayList<Integer>();
 
     String desc, stdate, enddate, worker_id, comments_st, order_st, name_st;
+    String taskId_history, createdBy_history;
+    String insp_id;
     int priority;
 
     Calendar myCalendarS, myCalendarE;
@@ -91,6 +94,7 @@ public class WorkerActivity extends AppCompatActivity {
     LayoutInflater inflater;
     CustomAdapter cardAdapter;
     EditText task_select;
+    String current_time, new_subTaskId;
 
     ListView added_list;
     JSONArray tasks;
@@ -117,6 +121,8 @@ public class WorkerActivity extends AppCompatActivity {
 
         pref = new PreferencesHelper(WorkerActivity.this);
         String uname = pref.GetPreferences("UserName");
+        insp_id = pref.GetPreferences("UserId");
+
 
         //Side Drawer Header
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -195,6 +201,7 @@ public class WorkerActivity extends AppCompatActivity {
         worker_id = i.getStringExtra("id");
 
         //Initialize
+        current_time = getCurrentTimeStamp();
         hidden_not = (ListView) findViewById(R.id.listView_hidden_notification);
         empty = findViewById(R.id.empty);
         workerName = (TextView) findViewById(R.id.textView_inspector);
@@ -237,43 +244,56 @@ public class WorkerActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+                String sub_id = ((TextView) view.findViewById(R.id.task_id)).getText().toString();
                 String name_st = ((TextView) view.findViewById(R.id.subName)).getText().toString();
                 String comments_st = ((TextView) view.findViewById(R.id.comments)).getText().toString();
                 String desc_st = ((TextView) view.findViewById(R.id.desc)).getText().toString();
                 String status_st = ((TextView) view.findViewById(R.id.status)).getText().toString();
                 String assigned_st = ((TextView) view.findViewById(R.id.assigned)).getText().toString();
 
-                LayoutInflater factory = LayoutInflater.from(WorkerActivity.this);
-                final View addView = factory.inflate(
-                        R.layout.dialog_taskdetails, null);
-                final AlertDialog detailDialog = new AlertDialog.Builder(WorkerActivity.this).create();
-                detailDialog.setView(addView);
 
-                //Initialise
-                TextView subName = (TextView) addView.findViewById(R.id.view_subName);
-                TextView desc = (TextView) addView.findViewById(R.id.view_description);
-                TextView comments = (TextView) addView.findViewById(R.id.view_comments);
-                TextView status = (TextView) addView.findViewById(R.id.view_status);
-                TextView assigned = (TextView) addView.findViewById(R.id.view_assigned);
-                ImageButton close = (ImageButton) addView.findViewById(R.id.imageButton_close);
+                Intent i = new Intent(WorkerActivity.this, SubTaskDetailsActivity.class);
+                i.putExtra("SubName", name_st);
+                i.putExtra("SubId", sub_id);
+                Log.d("SubId", sub_id);
+                i.putExtra("Comments", comments_st);
+                i.putExtra("Desc", desc_st);
+                i.putExtra("Status", status_st);
+                i.putExtra("Assigned", assigned_st);
+                startActivity(i);
 
-                //SetTextValues
-                subName.setText(name_st);
-                desc.setText("Description : " + desc_st);
-                comments.setText("Comments : " + comments_st);
-                status.setText("Status : " + status_st);
-                assigned.setText("Assigned By : " + assigned_st);
 
-                //ok button onClick
-                close.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        detailDialog.dismiss();
-                    }
-                });
-
-                detailDialog.show();
+//                LayoutInflater factory = LayoutInflater.from(WorkerActivity.this);
+//                final View addView = factory.inflate(
+//                        R.layout.dialog_taskdetails, null);
+//                final AlertDialog detailDialog = new AlertDialog.Builder(WorkerActivity.this).create();
+//                detailDialog.setView(addView);
+//
+//                //Initialise
+//                TextView subName = (TextView) addView.findViewById(R.id.view_subName);
+//                TextView desc = (TextView) addView.findViewById(R.id.view_description);
+//                TextView comments = (TextView) addView.findViewById(R.id.view_comments);
+//                TextView status = (TextView) addView.findViewById(R.id.view_status);
+//                TextView assigned = (TextView) addView.findViewById(R.id.view_assigned);
+//                ImageButton close = (ImageButton) addView.findViewById(R.id.imageButton_close);
+//
+//                //SetTextValues
+//                subName.setText(name_st);
+//                desc.setText("Description : " + desc_st);
+//                comments.setText("Comments : " + comments_st);
+//                status.setText("Status : " + status_st);
+//                assigned.setText("Assigned By : " + assigned_st);
+//
+//                //ok button onClick
+//                close.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//
+//                        detailDialog.dismiss();
+//                    }
+//                });
+//
+//                detailDialog.show();
             }
         });
 
@@ -499,6 +519,137 @@ public class WorkerActivity extends AppCompatActivity {
         }
     }
 
+    private class PostHistory extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(WorkerActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            String historyDate = getCurrentTimeStamp();
+            String status = params[0];
+            String user_name = pref.GetPreferences("UserName");
+            String createdbyId = pref.GetPreferences("UserId");
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewHistory");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            JSONStringer userJson = null;
+
+            if (status.equals("Assigned")) {
+                // Build JSON string
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("history")
+                            .object()
+                            .key("TaskId").value(taskId_history)
+                            .key("IsSubTask").value(1)
+                            .key("Notes").value("Assigned By : " + user_name)
+                            .key("Comments").value(status)
+//                        .key("HistoryDate").value(historyDate)
+//                        .key("CreatedDate").value(createdDate)
+                            .key("CreatedBy").value(insp_id)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Build JSON string
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("history")
+                            .object()
+                            .key("TaskId").value(new_subTaskId)
+                            .key("IsSubTask").value(1)
+                            .key("Notes").value("Created By : " + user_name)
+                            .key("Comments").value(status)
+//                        .key("HistoryDate").value(historyDate)
+//                        .key("CreatedDate").value(createdDate)
+                            .key("CreatedBy").value(insp_id)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+
+                Log.d("res", response);
+
+                if (response != null) {
+
+                    try {
+
+                        //Get Data from Json
+                        JSONObject jsonObject = new JSONObject(response);
+
+                        String message = jsonObject.getString("NewHistoryResult");
+
+                        //Save userid and username if success
+                        if (message.equals("success")) {
+                            response_json = 200;
+                        } else {
+                            response_json = 201;
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            if (response_json == 200) {
+                Toast.makeText(WorkerActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                new GetSubTaskList().execute("User");
+            } else {
+                Toast.makeText(WorkerActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private class AssignTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
 
         @Override
@@ -521,6 +672,8 @@ public class WorkerActivity extends AppCompatActivity {
             String status_st = passed.get(3);
             String comments_st = passed.get(4);
             String insp_id = pref.GetPreferences("UserId");
+            taskId_history = taskid_st;
+            createdBy_history = createdBy_st;
 
             HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
             request.setHeader("Accept", "application/json");
@@ -536,6 +689,7 @@ public class WorkerActivity extends AppCompatActivity {
                         .key("TaskId").value(taskid_st)
                         .key("AssignedToId").value(userId_st)
                         .key("AssignedById").value(insp_id)
+                        .key("AssignedDateStr").value(current_time)
                         .key("StatusId").value(status_st)
                         .key("IsSubTask").value(1)
                         .key("Comments").value(comments_st)
@@ -578,7 +732,7 @@ public class WorkerActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            new GetSubTaskList().execute("User");
+            new PostHistory().execute("Assigned");
 
         }
     }
@@ -602,8 +756,6 @@ public class WorkerActivity extends AppCompatActivity {
             request.setHeader("Accept", "application/json");
             request.setHeader("Content-type", "application/json");
 
-            String insp_id = pref.GetPreferences("UserId");
-
             // Build JSON string
             JSONStringer userJson = null;
             try {
@@ -614,6 +766,8 @@ public class WorkerActivity extends AppCompatActivity {
                         .key("TaskId").value(selected_task_id)
                         .key("SubTaskName").value(name_st)
                         .key("Description").value(desc)
+                        .key("CreatedDateStr").value(current_time)
+                        .key("ModifiedDateStr").value(current_time)
                         .key("TaskOrder").value(order_st)
                         .key("StatusId").value("1")
                         .key("PriorityId").value(priority)
@@ -644,6 +798,19 @@ public class WorkerActivity extends AppCompatActivity {
                 ResponseHandler<String> responseHandler = new BasicResponseHandler();
                 String response = httpClient.execute(request, responseHandler);
                 Log.d("res", response);
+
+                if (response != null) {
+
+                    try {
+
+                        //Get Data from Json
+                        JSONObject jsonObject = new JSONObject(response);
+                        new_subTaskId = jsonObject.getString("NewSubTaskResult");
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -659,8 +826,7 @@ public class WorkerActivity extends AppCompatActivity {
                 pDialog.dismiss();
 
             //Show new Subtask List
-            new GetSubTaskList().execute("User");
-
+            new PostHistory().execute("Created");
         }
     }
 
@@ -1126,6 +1292,13 @@ public class WorkerActivity extends AppCompatActivity {
         }
     }
 
+    public static String getCurrentTimeStamp() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        Date now = new Date();
+        String strDate = sdf.format(now);
+        return strDate;
+    }
+
     public boolean onCreateOptionsMenu(final Menu menu) {
         super.onCreateOptionsMenu(menu);
         //inflate menu
@@ -1203,4 +1376,9 @@ public class WorkerActivity extends AppCompatActivity {
         return new BitmapDrawable(getResources(), bitmap);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        super.finish();
+    }
 }

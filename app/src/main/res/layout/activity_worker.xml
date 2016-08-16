@@ -85,6 +85,8 @@
             android:layout_alignParentBottom="true"
             android:layout_alignRight="@+id/listView_task"
             android:layout_gravity="bottom|end"
+            app:fabSize="mini"
+            android:scaleType="center"
             android:background="@null"
             android:src="@android:drawable/ic_input_add"
             android:tint="@color/cardview_light_background" />

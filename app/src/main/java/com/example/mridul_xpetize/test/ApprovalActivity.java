@@ -432,7 +432,7 @@ public class ApprovalActivity extends AppCompatActivity {
                         .key("AssignedToId").value(0)
                         .key("AssignedById").value(user_id)
                         .key("IsSubTask").value(1)
-                        .key("StatusId").value(3)
+                        .key("StatusId").value(0)
                         .endObject()
                         .endObject();
             } catch (JSONException e) {

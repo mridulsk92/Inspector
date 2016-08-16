@@ -16,6 +16,7 @@ public class SQLite {
     public static final String KEY_TO = "AssignToId";
     public static final String KEY_START = "StartDateStr";
     public static final String KEY_END = "EndDateStr";
+    public static final String KEY_MODIFIED = "ModifiedDateStr";
     public static final String KEY_BY = "AssignedById";
     public static final String KEY_STATUS = "StatusId";
     public static final String KEY_SUB = "IsSubTask";
@@ -36,10 +37,10 @@ public class SQLite {
     public static final String KEY_COMMENTS_ASSIGNED = "Comments";
     public static final String KEY_CREATED_ASSIGNED = "CreatedBy";
 
-    private static final String DATABASE_NAME = "EagleXpetizeTest4";
-    private static final String DATABASE_TABLE = "PostTaskTableTest1";
-    private static final String DATABASE_TABLE_NOTIFICATION = "NotificationTableTest3";
-    private static final String DATABASE_TABLE_ASSIGNED = "AssignedTaskTable2";
+    private static final String DATABASE_NAME = "EagleXpetizeTest6";
+    private static final String DATABASE_TABLE = "PostTaskTableTest3";
+    private static final String DATABASE_TABLE_NOTIFICATION = "NotificationTableTest5";
+    private static final String DATABASE_TABLE_ASSIGNED = "AssignedTaskTable4";
     private static final int DATABASE_VERSION = 1;
     private DbHelper ourHelper;
     private final Context ourContext;
@@ -62,6 +63,7 @@ public class SQLite {
                             KEY_TO + " TEXT NOT NULL, " +
                             KEY_START + " TEXT NULL, " +
                             KEY_END + " TEXT NULL, " +
+                            KEY_MODIFIED + " TEXT NULL, " +
                             KEY_BY + " TEXT NOT NULL, " +
                             KEY_STATUS + " TEXT NOT NULL, " +
                             KEY_SUB + " TEXT NOT NULL, " +
@@ -128,7 +130,7 @@ public class SQLite {
         return ourDatabase.insert(DATABASE_TABLE_NOTIFICATION, null, cv);
     }
 
-    public long createEntry(String details, String taskId, String toId, String startDate, String endDate, String byId, String status, String sub, String comments, String createdBy) {
+    public long createEntry(String details, String taskId, String toId, String startDate, String endDate, String modifiedDate, String byId, String status, String sub, String comments, String createdBy) {
         // TODO Auto-generated method stub
         ContentValues cv = new ContentValues();
         cv.put(KEY_DETAILS, details);
@@ -136,6 +138,7 @@ public class SQLite {
         cv.put(KEY_TO, toId);
         cv.put(KEY_START, startDate);
         cv.put(KEY_END, endDate);
+        cv.put(KEY_MODIFIED, modifiedDate);
         cv.put(KEY_BY, byId);
         cv.put(KEY_STATUS, status);
         cv.put(KEY_SUB, sub);
@@ -170,7 +173,7 @@ public class SQLite {
 
     public String getCount() throws SQLException {
         // TODO Auto-generated method stub
-        String[] columns = new String[]{KEY_ROWID, KEY_DETAILS, KEY_TASK, KEY_TO, KEY_START, KEY_END, KEY_BY, KEY_STATUS, KEY_SUB, KEY_COMMENTS, KEY_CREATED};
+        String[] columns = new String[]{KEY_ROWID, KEY_DETAILS, KEY_TASK, KEY_TO, KEY_START, KEY_END, KEY_MODIFIED, KEY_BY, KEY_STATUS, KEY_SUB, KEY_COMMENTS, KEY_CREATED};
         Cursor c = ourDatabase.query(DATABASE_TABLE, columns, null, null, null, null, null);
         if (c != null) {
             String count = String.valueOf(c.getCount());
@@ -192,7 +195,7 @@ public class SQLite {
 
     public void deleteAssignedRow() {
 
-        String sql = "SELECT * FROM " + DATABASE_TABLE_ASSIGNED+ " ORDER BY " + KEY_ROWID + " DESC LIMIT 1";
+        String sql = "SELECT * FROM " + DATABASE_TABLE_ASSIGNED + " ORDER BY " + KEY_ROWID + " DESC LIMIT 1";
         Cursor c = ourDatabase.rawQuery(sql, null);
         if (c.moveToFirst()) {
             String rowId = c.getString(c.getColumnIndex(KEY_ROWID));
@@ -251,7 +254,7 @@ public class SQLite {
     public String[] getFirstRow() {
 
         String sql = "SELECT * FROM " + DATABASE_TABLE + " ORDER BY " + KEY_ROWID + " DESC LIMIT 1";
-        String[] columns = new String[]{KEY_ROWID, KEY_DETAILS, KEY_TASK, KEY_TO, KEY_START, KEY_END, KEY_BY, KEY_STATUS, KEY_SUB, KEY_COMMENTS, KEY_CREATED};
+        String[] columns = new String[]{KEY_ROWID, KEY_DETAILS, KEY_TASK, KEY_TO, KEY_START, KEY_END, KEY_MODIFIED, KEY_BY, KEY_STATUS, KEY_SUB, KEY_COMMENTS, KEY_CREATED};
         Cursor c = ourDatabase.rawQuery(sql, null);
         int iRow = c.getColumnIndex(KEY_ROWID);
         int iDetails = c.getColumnIndex(KEY_DETAILS);
@@ -259,6 +262,7 @@ public class SQLite {
         int iTo = c.getColumnIndex(KEY_TO);
         int iStart = c.getColumnIndex(KEY_START);
         int iEnd = c.getColumnIndex(KEY_END);
+        int iModified = c.getColumnIndex(KEY_MODIFIED);
         int iBy = c.getColumnIndex(KEY_BY);
         int iStatus = c.getColumnIndex(KEY_STATUS);
         int iSub = c.getColumnIndex(KEY_SUB);
@@ -275,11 +279,12 @@ public class SQLite {
                 arrData[3] = c.getString(iTo);
                 arrData[4] = c.getString(iStart);
                 arrData[5] = c.getString(iEnd);
-                arrData[6] = c.getString(iBy);
-                arrData[7] = c.getString(iStatus);
-                arrData[8] = c.getString(iSub);
-                arrData[9] = c.getString(iComments);
-                arrData[10] = c.getString(iCreated);
+                arrData[6] = c.getString(iModified);
+                arrData[7] = c.getString(iBy);
+                arrData[8] = c.getString(iStatus);
+                arrData[9] = c.getString(iSub);
+                arrData[10] = c.getString(iComments);
+                arrData[11] = c.getString(iCreated);
             }
         }
 

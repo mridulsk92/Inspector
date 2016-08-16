@@ -5,12 +5,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -31,6 +35,7 @@ import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.squareup.picasso.Picasso;
 
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
@@ -57,12 +62,16 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
     ProgressDialog pDialog;
     String userId_st;
     PreferencesHelper pref;
-    String id, detail_id, assignedBy, createdBy, name_st, desc_st, comments_st, startDate, endDate, status_st, assignedTo_st, comments_updated;
+    String id, detail_id, assignedBy, createdBy, name_st, desc_st, comments_st, startDate, endDate, status_st;
+    String assignedTo_st, comments_updated;
     int response_json;
     Drawer result = null;
     List<String> popupList = new ArrayList<String>();
     List<String> popupListId = new ArrayList<String>();
+    ImageView decodedImg;
     EditText assignEdit;
+    String encodedString;
+    ArrayList<HashMap<String, Object>> dataList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +87,6 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         pref = new PreferencesHelper(ApprovalDetailsActivity.this);
         final String acc_name = pref.GetPreferences("UserName");
         userId_st = pref.GetPreferences("UserId");
-
 
         //Adding Header to the Navigation Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -104,6 +112,8 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Initialise
+        decodedImg = (ImageView) findViewById(R.id.imageView_decodedImg);
+        dataList = new ArrayList<HashMap<String, Object>>();
         pref = new PreferencesHelper(ApprovalDetailsActivity.this);
         Button approve = (Button) findViewById(R.id.button_approve);
         Button reject = (Button) findViewById(R.id.button_reject);
@@ -114,9 +124,6 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         TextView start = (TextView) findViewById(R.id.start);
         TextView end = (TextView) findViewById(R.id.end);
         TextView status = (TextView) findViewById(R.id.status);
-//        TextView desc = (TextView)findViewById(R.id.desc);
-//        TextView desc = (TextView)findViewById(R.id.desc);
-//        TextView desc = (TextView)findViewById(R.id.desc);
 
         //Get Intent
         Intent i = getIntent();
@@ -141,6 +148,8 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         end.setText(endDate);
         status.setText(status_st);
 
+        new GetAttachment().execute();
+
         //onClick of Approve
         approve.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -158,6 +167,94 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                 RejectDialog();
             }
         });
+
+        //Load pic
+        String url = "http://vikray.in/NImage/SubTask"+id+".jpg";
+        Log.d("URL Image", url);
+        Picasso.
+                with(ApprovalDetailsActivity.this).
+                load(url).
+                into(decodedImg);
+    }
+
+    public static Bitmap decodeBase64(String input) {
+
+        byte[] decodedBytes = Base64.decode(input, 0);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+    }
+
+    private class GetAttachment extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            dataList.clear();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(ApprovalDetailsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            String user_id = pref.GetPreferences("UserId");
+
+            // Creating service handler class instance
+            ServiceHandler sh = new ServiceHandler();
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/Attachments/" + id;
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            Log.d("Url", url);
+            Log.d("Response: ", "> " + jsonStr);
+//            if (jsonStr != null) {
+//
+//                try {
+//
+//                    JSONArray tasks = new JSONArray(jsonStr);
+//
+//                    for (int i = 0; i < tasks.length(); i++) {
+//                        JSONObject c = tasks.getJSONObject(i);
+//
+//                        String id = c.getString("TaskId");
+//                        String encodedString = c.getString("TaskName");
+//                        String username = c.getString("UserName");
+//
+//                        // adding each child node to HashMap key => value
+//                        HashMap<String, Object> taskMap = new HashMap<String, Object>();
+//                        taskMap.put("TaskId", id);
+//                        taskMap.put("TaskName", taskName);
+//                        taskMap.put("UserName", username);
+//                        taskMap.put("Description", description);
+//                        taskMap.put("ById", byId);
+//                        taskMap.put("ToId", toId);
+//                        taskMap.put("IsNew", isNew);
+//                        dataList.add(taskMap);
+//                        popupList.add(description);
+//                        nameList.add(description);
+//
+//                    }
+//                    count = dataList.size();
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            } else {
+//                Log.e("ServiceHandler", "Couldn't get any data from the url");
+//            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+        }
     }
 
     private void RejectDialog() {
@@ -190,6 +287,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
 
                 String tempStart = getCurrentTimeStamp();
                 String tempEnd = getCurrentTimeStamp();
+                String currentTime = getCurrentTimeStamp();
                 comments_updated = commentBox.getText().toString();
 
                 if (isNetworkAvailable()) {
@@ -198,7 +296,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                     Toast.makeText(ApprovalDetailsActivity.this, "No Internet Connection. Data stored locally", Toast.LENGTH_SHORT).show();
                     SQLite entry = new SQLite(ApprovalDetailsActivity.this);
                     entry.open();
-                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, assignedBy, "6", "1", comments_updated, createdBy);
+                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "6", "1", comments_updated, createdBy);
                     entry.createEntryNotification("Rejected", id, userId_st, assignedTo_st, userId_st);
                     entry.createEntryAssigned(id, assignedTo_st, assignedBy, "1", "1", comments_updated, createdBy);
                     String c = entry.getCount();
@@ -233,6 +331,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
 
                 comments_updated = commentBox.getText().toString();
                 String tempStart = getCurrentTimeStamp();
+                String currentTime = getCurrentTimeStamp();
                 String tempEnd = getCurrentTimeStamp();
 
                 if (isNetworkAvailable()) {
@@ -241,7 +340,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                     Toast.makeText(ApprovalDetailsActivity.this, "No Internet connection. Data stored locally", Toast.LENGTH_SHORT).show();
                     SQLite entry = new SQLite(ApprovalDetailsActivity.this);
                     entry.open();
-                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, assignedBy, "7", "1", comments_updated, createdBy);
+                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "7", "1", comments_updated, createdBy);
                     entry.createEntryNotification("Approved", id, userId_st, assignedTo_st, userId_st);
                     String c = entry.getCount();
                     String n = entry.getCountNotification();
@@ -474,10 +573,121 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                 if (result.equals("Reject")) {
                     new PostNotification().execute("Rejected");
                     new AssignTask().execute();
+                    new PostHistory().execute("Rejected");
                 } else {
                     Toast.makeText(ApprovalDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
                     new PostNotification().execute("Approved");
+                    new PostHistory().execute("Approved");
                 }
+            } else {
+                Toast.makeText(ApprovalDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private class PostHistory extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(ApprovalDetailsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            String historyDate = getCurrentTimeStamp();
+            String status = params[0];
+            String user_name = pref.GetPreferences("UserName");
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewHistory");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            JSONStringer userJson = null;
+            // Build JSON string
+            try {
+                userJson = new JSONStringer()
+                        .object()
+                        .key("history")
+                        .object()
+                        .key("TaskId").value(id)
+                        .key("IsSubTask").value(1)
+                        .key("Notes").value("Reviewed By : " + user_name)
+                        .key("Comments").value(status)
+//                        .key("HistoryDate").value(historyDate)
+//                        .key("CreatedDate").value(createdDate)
+                        .key("CreatedBy").value(userId_st)
+                        .endObject()
+                        .endObject();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+
+                Log.d("res", response);
+
+                if (response != null) {
+
+                    try {
+
+                        //Get Data from Json
+                        JSONObject jsonObject = new JSONObject(response);
+
+                        String message = jsonObject.getString("NewHistoryResult");
+
+                        //Save userid and username if success
+                        if (message.equals("success")) {
+                            response_json = 200;
+                        } else {
+                            response_json = 201;
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            if (response_json == 200) {
+                Toast.makeText(ApprovalDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(ApprovalDetailsActivity.this, ApprovalActivity.class);
+                startActivity(i);
             } else {
                 Toast.makeText(ApprovalDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
             }
@@ -726,5 +936,11 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         });
 
         return true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        super.finish();
     }
 }

@@ -7,8 +7,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -45,13 +47,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -68,7 +70,8 @@ public class TaskDetailsActivity extends AppCompatActivity {
     View empty;
 
     String desc, stdate, enddate, worker_id, comments_st, order_st, name_st;
-    int priority;
+    int priority, response_json;
+    String super_id, taskId_history;
 
     Calendar myCalendarS, myCalendarE;
     EditText startDate, endDate;
@@ -76,9 +79,9 @@ public class TaskDetailsActivity extends AppCompatActivity {
     CustomAdapter cardAdapter;
     EditText task_select;
 
-    ImageButton addSubTask;
+    FloatingActionButton addSubTask;
     JSONArray tasks;
-    String selected_task, selected_task_id;
+    String selected_task, selected_task_id, new_subTaskId;
 
     List<String> popupList = new ArrayList<String>();
     List<String> popupListId = new ArrayList<String>();
@@ -101,6 +104,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
         pref = new PreferencesHelper(TaskDetailsActivity.this);
         UserName = pref.GetPreferences("UserName");
         UserId = pref.GetPreferences("UserId");
+        super_id = UserId;
 
         //Adding Header to the Navigation Drawer
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -137,7 +141,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
         //Initialise
         dataList = new ArrayList<>();
-        addSubTask = (ImageButton) findViewById(R.id.imageButton_addTask);
+        addSubTask = (FloatingActionButton) findViewById(R.id.fab);
         viewList = (ListView) findViewById(R.id.listView_sub);
         TextView viewId = (TextView) findViewById(R.id.text_id);
         TextView viewName = (TextView) findViewById(R.id.text_taskName);
@@ -234,7 +238,6 @@ public class TaskDetailsActivity extends AppCompatActivity {
         final EditText comments = (EditText) addView.findViewById(R.id.editText_comments);
         final EditText order = (EditText) addView.findViewById(R.id.editText_order);
         task_select = (EditText) addView.findViewById(R.id.editText_Tasks);
-        task_select.setVisibility(View.GONE);
 
         task_select.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -429,6 +432,137 @@ public class TaskDetailsActivity extends AppCompatActivity {
         }
     }
 
+    private class PostHistory extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(TaskDetailsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            String historyDate = getCurrentTimeStamp();
+            String status = params[0];
+            String user_name = pref.GetPreferences("UserName");
+            String createdbyId = pref.GetPreferences("UserId");
+
+            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewHistory");
+            request.setHeader("Accept", "application/json");
+            request.setHeader("Content-type", "application/json");
+
+            JSONStringer userJson = null;
+
+            if (status.equals("Assigned")) {
+                // Build JSON string
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("history")
+                            .object()
+                            .key("TaskId").value(taskId_history)
+                            .key("IsSubTask").value(1)
+                            .key("Notes").value("Assigned By : " + user_name)
+                            .key("Comments").value(status)
+//                        .key("HistoryDate").value(historyDate)
+//                        .key("CreatedDate").value(createdDate)
+                            .key("CreatedBy").value(super_id)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Build JSON string
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("history")
+                            .object()
+                            .key("TaskId").value(new_subTaskId)
+                            .key("IsSubTask").value(1)
+                            .key("Notes").value("Created By : " + user_name)
+                            .key("Comments").value(status)
+//                        .key("HistoryDate").value(historyDate)
+//                        .key("CreatedDate").value(createdDate)
+                            .key("CreatedBy").value(super_id)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Log.d("Json", String.valueOf(userJson));
+
+            StringEntity entity = null;
+            try {
+                entity = new StringEntity(userJson.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            entity.setContentType("application/json");
+
+            request.setEntity(entity);
+
+            // Send request to WCF service
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            try {
+                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                String response = httpClient.execute(request, responseHandler);
+
+                Log.d("res", response);
+
+                if (response != null) {
+
+                    try {
+
+                        //Get Data from Json
+                        JSONObject jsonObject = new JSONObject(response);
+
+                        String message = jsonObject.getString("NewHistoryResult");
+
+                        //Save userid and username if success
+                        if (message.equals("success")) {
+                            response_json = 200;
+                        } else {
+                            response_json = 201;
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            if (response_json == 200) {
+                Toast.makeText(TaskDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                new GetSubTaskList().execute("List");
+            } else {
+                Toast.makeText(TaskDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private class AssignTask extends AsyncTask<ArrayList<String>, Void, ArrayList<String>> {
 
         @Override
@@ -452,6 +586,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
             String status_st = passed.get(3);
             String comments_st = passed.get(4);
             String insp_id = pref.GetPreferences("UserId");
+            taskId_history = taskid_st;
 
             HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
             request.setHeader("Accept", "application/json");
@@ -509,7 +644,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
             if (pDialog.isShowing())
                 pDialog.dismiss();
 
-            new GetSubTaskList().execute("List");
+            new PostHistory().execute("Assigned");
 
         }
     }
@@ -534,6 +669,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
             request.setHeader("Content-type", "application/json");
 
             String insp_id = pref.GetPreferences("UserId");
+            String current_time = getCurrentTimeStamp();
 
             // Build JSON string
             JSONStringer userJson = null;
@@ -545,6 +681,8 @@ public class TaskDetailsActivity extends AppCompatActivity {
                         .key("TaskId").value(Taskid)
                         .key("SubTaskName").value(name_st)
                         .key("Description").value(desc)
+                        .key("CreatedDateStr").value(current_time)
+                        .key("ModifiedDateStr").value(current_time)
                         .key("TaskOrder").value(order_st)
                         .key("StatusId").value("1")
                         .key("PriorityId").value(priority)
@@ -575,6 +713,19 @@ public class TaskDetailsActivity extends AppCompatActivity {
                 ResponseHandler<String> responseHandler = new BasicResponseHandler();
                 String response = httpClient.execute(request, responseHandler);
                 Log.d("res", response);
+
+                if (response != null) {
+
+                    try {
+
+                        //Get Data from Json
+                        JSONObject jsonObject = new JSONObject(response);
+                        new_subTaskId = jsonObject.getString("NewSubTaskResult");
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -590,7 +741,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
                 pDialog.dismiss();
 
             //Show new Subtask List
-            new GetSubTaskList().execute("List");
+            new PostHistory().execute("Created");
 
         }
     }
@@ -606,7 +757,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
         //class for caching the views in a row
         private class ViewHolder {
 
-            TextView comments, desc, priority, startdate, enddate, jobOrder, statusId, id, subId, createdBy, subName, isSub,status,assigned;
+            TextView comments, desc, priority, startdate, enddate, jobOrder, statusId, id, subId, createdBy, subName, isSub, status, assignedBy;
             CardView cv;
         }
 
@@ -619,12 +770,12 @@ public class TaskDetailsActivity extends AppCompatActivity {
             if (convertView == null) {
 
                 //inflate the custom layout
-                convertView = inflater.from(parent.getContext()).inflate(R.layout.task_list, parent, false);
+                convertView = inflater.from(parent.getContext()).inflate(R.layout.task_list_new, parent, false);
                 viewHolder = new ViewHolder();
 
                 //cache the views
                 viewHolder.status = (TextView) convertView.findViewById(R.id.status);
-                viewHolder.assigned = (TextView)convertView.findViewById(R.id.assigned);
+                viewHolder.assignedBy = (TextView) convertView.findViewById(R.id.assigned);
                 viewHolder.subName = (TextView) convertView.findViewById(R.id.subName);
                 viewHolder.createdBy = (TextView) convertView.findViewById(R.id.createdBy);
                 viewHolder.subId = (TextView) convertView.findViewById(R.id.subtask_id);
@@ -649,7 +800,6 @@ public class TaskDetailsActivity extends AppCompatActivity {
             viewHolder.comments.setText(dataList.get(position).get("Comments").toString());
             viewHolder.desc.setText(dataList.get(position).get("Description").toString());
             viewHolder.status.setText(dataList.get(position).get("Status").toString());
-            viewHolder.assigned.setText(dataList.get(position).get("AssignedByName").toString());
 //            viewHolder.priority.setText(dataList.get(position).get("Priority").toString());
 //            viewHolder.startdate.setText(dataList.get(position).get("TaskStartDate").toString());
 //            viewHolder.enddate.setText(dataList.get(position).get("TaskEndDate").toString());
@@ -657,6 +807,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
 //            viewHolder.isSub.setText(dataList.get(position).get("IsSub").toString());
             viewHolder.statusId.setText(dataList.get(position).get("StatusId").toString());
             viewHolder.id.setText(dataList.get(position).get("TaskId").toString());
+            viewHolder.assignedBy.setText(dataList.get(position).get("AssignedByName").toString());
 //            viewHolder.subId.setText(dataList.get(position).get("SubTaskId").toString());
             return convertView;
         }
@@ -687,12 +838,104 @@ public class TaskDetailsActivity extends AppCompatActivity {
             // Creating service handler class instance
             ServiceHandler sh = new ServiceHandler();
             if (check.equals("List")) {
+
                 url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/" + Taskid + "/0/1/1";
+
+//                HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
+//                request.setHeader("Accept", "application/json");
+//                request.setHeader("Content-type", "application/json");
+//
+//                // Build JSON string
+//                JSONStringer userJson = null;
+//                try {
+//                    userJson = new JSONStringer()
+//                            .object()
+//                            .key("taskDetails")
+//                            .object()
+//                            .key("TaskDetailsId").value(0)
+//                            .key("TaskId").value(Taskid)
+//                            .key("AssignedToId").value(0)
+//                            .key("AssignedById").value(0)
+//                            .key("IsSubTask").value(1)
+//                            .key("StatusId").value(0)
+//                            .endObject()
+//                            .endObject();
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                Log.d("Json", String.valueOf(userJson));
+//                StringEntity entity = null;
+//                try {
+//                    entity = new StringEntity(userJson.toString(), "UTF-8");
+//                } catch (UnsupportedEncodingException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+//                entity.setContentType("application/json");
+//
+//                request.setEntity(entity);
+//
+//                // Send request to WCF service
+//                DefaultHttpClient httpClient = new DefaultHttpClient();
+//                try {
+//                    ResponseHandler<String> responseHandler = new BasicResponseHandler();
+//                    String response = httpClient.execute(request, responseHandler);
+//                    Log.d("res", response);
+//
+//                    if (response != null) {
+//
+//                        try {
+//
+//                            JSONObject json1 = new JSONObject(response);
+//                            tasks = json1.getJSONArray("TaskAssignedResult");
+//
+//                            // Looping through Array
+//                            for (int i = 0; i < tasks.length(); i++) {
+//                                JSONObject c = tasks.getJSONObject(i);
+//
+//                                String id = c.getString("TaskId");
+//                                String name = c.getString("TaskName");
+//                                String desc = c.getString("TaskDescription");
+//                                String comments = c.getString("Comments");
+//                                String isSub = c.getString("IsSubTask");
+//                                String status = c.getString("Status");
+//                                String createdBy = c.getString("CreatedBy");
+//                                int statusId = c.getInt("StatusId");
+//                                String assignedBy = c.getString("AssignedByName");
+//
+//                                //adding each child node to HashMap key => value
+//                                HashMap<String, Object> taskMap = new HashMap<String, Object>();
+//                                taskMap.put("TaskDescription", desc);
+//                                taskMap.put("CreatedBy", createdBy);
+//                                taskMap.put("TaskId", id);
+//                                taskMap.put("TaskName", name);
+//                                taskMap.put("IsSub", isSub);
+//                                taskMap.put("AssignedByName", assignedBy);
+//                                taskMap.put("StatusId", statusId);
+//                                taskMap.put("Comments", comments);
+//                                taskMap.put("Status", status);
+//
+//                                dataList.add(taskMap);
+//
+//                            }
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    } else {
+//                        Log.e("ServiceHandler", "Couldn't get any data from the url");
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
             } else {
+
                 url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/0/1/1";
             }
-
             Log.d("Url", url);
+
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
             Log.d("Response: ", "> " + jsonStr);
@@ -710,8 +953,8 @@ public class TaskDetailsActivity extends AppCompatActivity {
                         String createdBy = c.getString("CreatedBy");
                         String name = c.getString("SubTaskName");
                         String desc = c.getString("Description");
-                        String status = c.getString("Status");
                         String comments = c.getString("Comments");
+                        String status = c.getString("Status");
                         String statusId = c.getString("StatusId");
                         String priority = c.getString("Priority");
                         String subId = c.getString("SubTaskId");
@@ -725,7 +968,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
                         taskMap.put("SubTaskName", name);
                         taskMap.put("Description", desc);
                         taskMap.put("Status",status);
-                        taskMap.put("AssignedByName", "");
+                        taskMap.put("AssignedByName","");
                         taskMap.put("StatusId", statusId);
                         taskMap.put("Comments", comments);
                         taskMap.put("SubTaskId", subId);
@@ -737,6 +980,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
             } else {
                 Log.e("ServiceHandler", "Couldn't get any data from the url");
             }
@@ -791,6 +1035,13 @@ public class TaskDetailsActivity extends AppCompatActivity {
         }
     }
 
+    public static String getCurrentTimeStamp() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        Date now = new Date();
+        String strDate = sdf.format(now);
+        return strDate;
+    }
+
     private void updateLabelStart() {
 
         String myFormat = "yyyy/MM/dd";
@@ -842,5 +1093,11 @@ public class TaskDetailsActivity extends AppCompatActivity {
         });
 
         return true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        super.finish();
     }
 }

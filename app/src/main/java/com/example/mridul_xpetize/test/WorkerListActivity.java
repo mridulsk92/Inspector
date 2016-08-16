@@ -365,7 +365,6 @@ public class WorkerListActivity extends AppCompatActivity {
                 pDialogN.dismiss();
 
             // initialize pop up window
-            menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
             CustomAdapterNot notAdapter = new CustomAdapterNot(WorkerListActivity.this, R.layout.popup_layout, notiList);
             hidden_not.setAdapter(notAdapter);
 
@@ -378,6 +377,7 @@ public class WorkerListActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_my, menu);
 
         menuItem = menu.findItem(R.id.testAction);
+        menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
         menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {

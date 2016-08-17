@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/checkBox_medium"
         android:checked="false"
-        android:text="High Priority" />
+        android:text="@string/HighPriority" />
 
     <EditText
         android:id="@+id/editText_comment"
@@ -20,7 +20,7 @@
         android:layout_alignParentRight="true"
         android:background="@drawable/edit_text_style"
         android:gravity="top"
-        android:hint="Type Your Comment Here.."
+        android:hint="@string/TypeComment"
         android:padding="5dp" />
 
     <CheckBox
@@ -31,7 +31,7 @@
         android:layout_alignRight="@+id/editText_comment"
         android:layout_below="@+id/editText_comment"
         android:checked="false"
-        android:text="Medium Priority" />
+        android:text="@string/MediumPriority" />
 
     <CheckBox
         android:id="@+id/checkBox_low"
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/checkBox_high"
         android:checked="false"
-        android:text="Low Priority" />
+        android:text="@string/LowPriority" />
 
     <Button
         android:id="@+id/button_reject"
@@ -47,6 +47,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/checkBox_low"
         android:layout_centerHorizontal="true"
-        android:text="Reject" />
+        android:text="@string/Reject" />
 
 </RelativeLayout>

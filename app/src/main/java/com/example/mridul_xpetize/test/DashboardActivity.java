@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -45,8 +46,10 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialize.holder.StringHolder;
 
 import org.json.JSONArray;
@@ -56,6 +59,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class DashboardActivity extends AppCompatActivity {
 
@@ -78,6 +82,8 @@ public class DashboardActivity extends AppCompatActivity {
     String popUpContents[];
     CustomAdapter cardAdapter;
     PopupWindow popupWindow;
+    SharedPreferences prefNew;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +96,7 @@ public class DashboardActivity extends AppCompatActivity {
         toolbar.setTitle("Inspector");
 
         pref = new PreferencesHelper(DashboardActivity.this);
+        prefNew = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
         String name = pref.GetPreferences("UserName");
 
         //Adding Header to the Navigation Drawer
@@ -108,9 +115,74 @@ public class DashboardActivity extends AppCompatActivity {
                 .withTranslucentStatusBar(false)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
-                ).build();
+                        new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new PrimaryDrawerItem().withName(getString(R.string.Language)).withIcon(getResources().getDrawable(R.drawable.language_switch_ic)).withIdentifier(3).withSelectable(false),
+                        new SecondaryDrawerItem().withName(R.string.LogOut).withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                        if (drawerItem != null) {
+                            if (drawerItem.getIdentifier() == 1) {
+
+                                //Clicked About
+
+                            } else if (drawerItem.getIdentifier() == 2) {
+
+                                //Clicked LogOut
+
+                            } else if (drawerItem.getIdentifier() == 3) {
+
+                                SharedPreferences sp = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
+                                int selection = sp.getInt("LanguageSelect", -1);
+                                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(DashboardActivity.this);
+                                CharSequence[] array = {"English", "Japanese"};
+                                builder.setTitle("Select Language")
+                                        .setSingleChoiceItems(array, selection, new DialogInterface.OnClickListener() {
+
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+
+                                                if (which == 1) {
+                                                    String lang = "ja";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                } else {
+                                                    String lang = "en";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                }
+                                            }
+                                        })
+
+                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                // User clicked OK, so save the result somewhere
+
+                                            }
+                                        })
+                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+
+                                            }
+                                        });
+
+                                builder.create();
+                                builder.show();
+                            }
+                        }
+                        return false;
+                    }
+                })
+                .build();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
@@ -513,5 +585,24 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
+    }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(DashboardActivity.this, DashboardActivity.class);
+        startActivity(i);
     }
 }

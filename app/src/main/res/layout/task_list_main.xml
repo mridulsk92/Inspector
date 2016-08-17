@@ -13,7 +13,7 @@
         android:layout_below="@+id/username"
         android:layout_toEndOf="@+id/username"
         android:layout_toRightOf="@+id/username"
-        android:text="Task Name "
+        android:text="@string/TaskName"
         android:textSize="13sp"
         android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
         android:layout_toRightOf="@+id/taskname"
         android:gravity="center"
         android:paddingTop="2dp"
-        android:text="Description"
+        android:text="@string/Description"
         android:textSize="10sp"
         android:visibility="visible" />
 
@@ -95,7 +95,7 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/location"
         android:layout_marginLeft="1dp"
-        android:text="Assigned By : "
+        android:text="@string/AssignedBy"
         android:textSize="10sp"
         android:visibility="visible" />
 

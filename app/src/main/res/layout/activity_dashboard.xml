@@ -70,14 +70,14 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/imageButton_myTasks"
         android:layout_marginLeft="10dp"
-        android:text="My Tasks"
+        android:text="@string/MyTasks"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Workers"
+        android:text="@string/Operators"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_below="@+id/imageButton_workers"
         android:layout_alignLeft="@+id/textView7"
@@ -101,7 +101,7 @@
         android:layout_alignLeft="@+id/textView2"
         android:layout_alignStart="@+id/textView2"
         android:layout_below="@+id/imageButton_approval"
-        android:text="Approve / Reject"
+        android:text="@string/ApproveReject"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <ListView

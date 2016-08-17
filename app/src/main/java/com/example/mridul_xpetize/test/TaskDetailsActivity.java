@@ -1100,4 +1100,24 @@ public class TaskDetailsActivity extends AppCompatActivity {
         super.onPause();
         super.finish();
     }
+
+    public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
+    }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(TaskDetailsActivity.this, TaskDetailsActivity.class);
+        startActivity(i);
+    }
+
 }

@@ -1,10 +1,12 @@
 package com.example.mridul_xpetize.test;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -32,8 +34,10 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
@@ -53,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class ApprovalActivity extends AppCompatActivity {
 
@@ -76,6 +81,8 @@ public class ApprovalActivity extends AppCompatActivity {
     ProgressDialog pDialogN;
     ArrayList<HashMap<String, Object>> dataList;
     ArrayList<HashMap<String, Object>> notiList;
+    SharedPreferences prefNew;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +100,7 @@ public class ApprovalActivity extends AppCompatActivity {
         final String acc_name = pref.GetPreferences("UserName");
 
         //Initialise Views
+        prefNew = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
         hidden_not = (ListView) findViewById(R.id.listView_hidden_notification);
         empty = findViewById(R.id.empty);
         subTask_list = (ListView) findViewById(R.id.listView_subtasks);
@@ -115,9 +123,74 @@ public class ApprovalActivity extends AppCompatActivity {
                 .withTranslucentStatusBar(false)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
-                ).build();
+                        new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new PrimaryDrawerItem().withName(getString(R.string.Language)).withIcon(getResources().getDrawable(R.drawable.language_switch_ic)).withIdentifier(3).withSelectable(false),
+                        new SecondaryDrawerItem().withName(R.string.LogOut).withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                        if (drawerItem != null) {
+                            if (drawerItem.getIdentifier() == 1) {
+
+                                //Clicked About
+
+                            } else if (drawerItem.getIdentifier() == 2) {
+
+                                //Clicked LogOut
+
+                            } else if (drawerItem.getIdentifier() == 3) {
+
+                                SharedPreferences sp = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
+                                int selection = sp.getInt("LanguageSelect", -1);
+                                AlertDialog.Builder builder = new AlertDialog.Builder(ApprovalActivity.this);
+                                CharSequence[] array = {"English", "Japanese"};
+                                builder.setTitle("Select Language")
+                                        .setSingleChoiceItems(array, selection, new DialogInterface.OnClickListener() {
+
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+
+                                                if (which == 1) {
+                                                    String lang = "ja";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                } else {
+                                                    String lang = "en";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                }
+                                            }
+                                        })
+
+                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                // User clicked OK, so save the result somewhere
+
+                                            }
+                                        })
+                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+
+                                            }
+                                        });
+
+                                builder.create();
+                                builder.show();
+                            }
+                        }
+                        return false;
+                    }
+                })
+                .build();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
@@ -432,7 +505,7 @@ public class ApprovalActivity extends AppCompatActivity {
                         .key("AssignedToId").value(0)
                         .key("AssignedById").value(user_id)
                         .key("IsSubTask").value(1)
-                        .key("StatusId").value(0)
+                        .key("StatusId").value(3)
                         .endObject()
                         .endObject();
             } catch (JSONException e) {
@@ -538,6 +611,25 @@ public class ApprovalActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
+    }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(ApprovalActivity.this, ApprovalActivity.class);
+        startActivity(i);
     }
 
     @Override

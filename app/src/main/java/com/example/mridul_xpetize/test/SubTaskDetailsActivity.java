@@ -49,6 +49,7 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Locale;
 
 public class SubTaskDetailsActivity extends AppCompatActivity {
 
@@ -104,7 +105,7 @@ public class SubTaskDetailsActivity extends AppCompatActivity {
         });
 
         play.setEnabled(false);
-        send.setEnabled(true);
+        send.setEnabled(false);
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -341,5 +342,24 @@ public class SubTaskDetailsActivity extends AppCompatActivity {
         });
         recorder.start();
         mProgressDialog.show();
+    }
+
+    public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
+    }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(SubTaskDetailsActivity.this, SubTaskDetailsActivity.class);
+        startActivity(i);
     }
 }

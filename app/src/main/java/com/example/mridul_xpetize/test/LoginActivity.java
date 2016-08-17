@@ -1,7 +1,11 @@
 package com.example.mridul_xpetize.test;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,11 +13,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Locale;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -23,6 +30,8 @@ public class LoginActivity extends AppCompatActivity {
     ProgressDialog pDialog;
     int response;
     PreferencesHelper pref;
+    ImageButton languageBtn;
+    SharedPreferences prefNew;
 
     private static String TAG_NAME = "UserName";
     private static String TAG_ID = "UserId";
@@ -34,6 +43,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         //Initialise
+        prefNew = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
+        languageBtn = (ImageButton) findViewById(R.id.imageButton_language);
         username = (EditText) findViewById(R.id.editText_username);
         password = (EditText) findViewById(R.id.editText_password);
         login = (Button) findViewById(R.id.button_login);
@@ -51,6 +62,61 @@ public class LoginActivity extends AppCompatActivity {
                 //Call Post Data function
                 new PostLogin().execute();
 
+            }
+        });
+
+        //onClick of ImageButton
+        languageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                SharedPreferences sp = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
+                int selection = sp.getInt("LanguageSelect", -1);
+
+                Log.d("Test", String.valueOf(selection));
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                CharSequence[] array = {"English", "Japanese"};
+                builder.setTitle("Select Language")
+                        .setSingleChoiceItems(array, selection, new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                if (which == 1) {
+                                    String lang = "ja";
+                                    pref.SavePreferences("Language", lang);
+                                    SharedPreferences.Editor editor = prefNew.edit();
+                                    editor.putInt("LanguageSelect", which);
+                                    editor.commit();
+                                    changeLang(lang);
+                                }else{
+                                    String lang = "en";
+                                    pref.SavePreferences("Language", lang);
+                                    SharedPreferences.Editor editor = prefNew.edit();
+                                    editor.putInt("LanguageSelect", which);
+                                    editor.commit();
+                                    changeLang(lang);
+                                }
+                            }
+                        })
+
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User clicked OK, so save the result somewhere
+
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+
+                            }
+                        });
+
+                builder.create();
+                builder.show();
             }
         });
     }
@@ -127,5 +193,24 @@ public class LoginActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         super.finish();
+    }   public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
     }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(LoginActivity.this, LoginActivity.class);
+        startActivity(i);
+    }
+
+
 }

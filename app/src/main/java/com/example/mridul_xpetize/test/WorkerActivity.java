@@ -1,11 +1,13 @@
 package com.example.mridul_xpetize.test;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -108,6 +110,7 @@ public class WorkerActivity extends AppCompatActivity {
 
     ArrayList<HashMap<String, Object>> dataList;
     ArrayList<HashMap<String, Object>> notiList;
+    SharedPreferences prefNew;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +122,7 @@ public class WorkerActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle("Inspector");
 
+        prefNew = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
         pref = new PreferencesHelper(WorkerActivity.this);
         String uname = pref.GetPreferences("UserName");
         insp_id = pref.GetPreferences("UserId");
@@ -141,18 +145,75 @@ public class WorkerActivity extends AppCompatActivity {
                 .withSelectedItem(-1)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new SecondaryDrawerItem().withName("About").withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
-                        new SecondaryDrawerItem().withName("Log Out").withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
+                        new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
+                        new PrimaryDrawerItem().withName(getString(R.string.Language)).withIcon(getResources().getDrawable(R.drawable.language_switch_ic)).withIdentifier(3).withSelectable(false),
+                        new SecondaryDrawerItem().withName(R.string.LogOut).withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
                 ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         if (drawerItem != null) {
+                            if (drawerItem.getIdentifier() == 1) {
 
+                                //Clicked About
+
+                            } else if (drawerItem.getIdentifier() == 2) {
+
+                                //Clicked LogOut
+
+                            } else if (drawerItem.getIdentifier() == 3) {
+
+                                SharedPreferences sp = getSharedPreferences("LangPref", Activity.MODE_PRIVATE);
+                                int selection = sp.getInt("LanguageSelect", -1);
+                                AlertDialog.Builder builder = new AlertDialog.Builder(WorkerActivity.this);
+                                CharSequence[] array = {"English", "Japanese"};
+                                builder.setTitle("Select Language")
+                                        .setSingleChoiceItems(array, selection, new DialogInterface.OnClickListener() {
+
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+
+                                                if (which == 1) {
+                                                    String lang = "ja";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                } else {
+                                                    String lang = "en";
+                                                    pref.SavePreferences("Language", lang);
+                                                    SharedPreferences.Editor editor = prefNew.edit();
+                                                    editor.putInt("LanguageSelect", which);
+                                                    editor.commit();
+                                                    changeLang(lang);
+                                                }
+                                            }
+                                        })
+
+                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                // User clicked OK, so save the result somewhere
+
+                                            }
+                                        })
+                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int id) {
+
+                                            }
+                                        });
+
+                                builder.create();
+                                builder.show();
+                            }
                         }
                         return false;
                     }
-                }).build();
+                })
+                .build();
+
 
         //ToggleButton on Toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1381,4 +1442,24 @@ public class WorkerActivity extends AppCompatActivity {
         super.onPause();
         super.finish();
     }
+
+    public void changeLang(String lang) {
+
+        if (lang.equalsIgnoreCase(""))
+            return;
+        Locale myLocale = new Locale(lang);
+//        saveLocale(lang);
+        Locale.setDefault(myLocale);
+        android.content.res.Configuration config = new android.content.res.Configuration();
+        config.locale = myLocale;
+        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateTexts();
+    }
+
+    private void updateTexts() {
+
+        Intent i = new Intent(WorkerActivity.this, WorkerActivity.class);
+        startActivity(i);
+    }
+
 }

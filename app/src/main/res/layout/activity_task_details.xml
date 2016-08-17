@@ -56,7 +56,7 @@
                 android:id="@+id/text_taskName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Name"
+                android:text="@string/Name"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -65,7 +65,7 @@
                 android:id="@+id/text_desc"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Description"
+                android:text="@string/Description"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
 
@@ -83,6 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="StartDate : "
+                android:visibility="gone"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
 
@@ -91,6 +92,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="EndDate : "
+                android:visibility="gone"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
 
@@ -98,7 +100,7 @@
                 android:id="@+id/text_comments"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Coments"
+                android:text="@string/Comments"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
 
@@ -106,7 +108,7 @@
                 android:id="@+id/text_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Status"
+                android:text="@string/Status"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
 
@@ -114,7 +116,7 @@
                 android:id="@+id/text_assigned"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="AssignedBy"
+                android:text="@string/AssignedBy"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="10sp" />
         </LinearLayout>

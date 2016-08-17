@@ -48,6 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:background="@null"
+        android:visibility="gone"
         android:src="@android:drawable/ic_input_add"
         android:tint="@color/cardview_light_background"
         android:layout_alignParentBottom="true"

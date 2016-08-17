@@ -51,7 +51,7 @@
             android:id="@+id/textView_inspector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Worker"
+            android:text="@string/Operator"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"

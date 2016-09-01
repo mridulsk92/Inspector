@@ -107,8 +107,8 @@ public class TaskActivity extends AppCompatActivity {
                 .withSelectedItem(-1)
                 .withDisplayBelowStatusBar(true)
                 .addDrawerItems(
-                        new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
                         new PrimaryDrawerItem().withName(getString(R.string.Language)).withIcon(getResources().getDrawable(R.drawable.language_switch_ic)).withIdentifier(3).withSelectable(false),
+                        new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
                         new SecondaryDrawerItem().withName(R.string.LogOut).withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
                 ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -331,11 +331,10 @@ public class TaskActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
 
-                    //Get ID and Name of slected
+                    //Get ID and Name of selected
                     String name = popupList.get(which);
                     selected_id = popupListId.get(which);
                     assigned_worker.setText(name);
-
                 }
             });
             builderSingle.show();

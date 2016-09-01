@@ -47,6 +47,7 @@
     <string name="TaskName">TaskName</string>
     <string name="Attachments">Attachments</string>
     <string name="Language">Language</string>
+    <string name="checkItemHint">Enter Check List Item here..</string>
 
     <string name="TypeComment">Type your comment here..</string>
 

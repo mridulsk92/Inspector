@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListView
+        android:id="@+id/listView_items"
+        android:layout_width="wrap_content"
+        android:layout_height="387dp"
+        android:layout_above="@+id/button_submitList"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/editText_itemText"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_marginTop="2dp"
+        android:visibility="gone" />
+
+    <EditText
+        android:id="@+id/editText_itemText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="2dp"
+        android:layout_toLeftOf="@+id/imageButton_itemAdd"
+        android:layout_weight="1"
+        android:background="@drawable/edittext_modified"
+        android:hint="@string/checkItemHint"
+        android:padding="10dp" />
+
+    <ImageButton
+        android:id="@+id/imageButton_itemAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="2dp"
+        android:background="@null"
+        android:src="@drawable/add_ic" />
+
+    <TextView
+        android:id="@+id/empty"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp"
+        android:layout_above="@+id/button_submitList"
+        android:layout_alignEnd="@+id/imageButton_itemAdd"
+        android:layout_alignRight="@+id/imageButton_itemAdd"
+        android:layout_below="@+id/editText_itemText"
+        android:gravity="center"
+        android:text="No Items Added"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/button_submitList"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/Submit" />
+
+</RelativeLayout>

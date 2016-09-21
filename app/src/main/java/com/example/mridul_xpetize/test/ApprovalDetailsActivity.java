@@ -244,7 +244,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         });
 
         //Load pic
-        String url = "http://vikray.in/NImage/SubTask"+id+".jpg";
+        String url = "http://vikray.in/NImage/SubTask" + id + ".jpg";
         Log.d("URL Image", url);
         Picasso.
                 with(ApprovalDetailsActivity.this).
@@ -649,11 +649,11 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                 if (result.equals("Reject")) {
                     new PostNotification().execute("Rejected");
                     new AssignTask().execute();
-                    new PostHistory().execute("Rejected");
+//                    new PostHistory().execute("Rejected");
                 } else {
                     Toast.makeText(ApprovalDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
                     new PostNotification().execute("Approved");
-                    new PostHistory().execute("Approved");
+//                    new PostHistory().execute("Approved");
                 }
             } else {
                 Toast.makeText(ApprovalDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
@@ -661,114 +661,114 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private class PostHistory extends AsyncTask<String, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            // Showing progress dialog
-            pDialog = new ProgressDialog(ApprovalDetailsActivity.this);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-
-            String historyDate = getCurrentTimeStamp();
-            String status = params[0];
-            String user_name = pref.GetPreferences("UserName");
-
-            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewHistory");
-            request.setHeader("Accept", "application/json");
-            request.setHeader("Content-type", "application/json");
-
-            JSONStringer userJson = null;
-            // Build JSON string
-            try {
-                userJson = new JSONStringer()
-                        .object()
-                        .key("history")
-                        .object()
-                        .key("TaskId").value(id)
-                        .key("IsSubTask").value(1)
-                        .key("Notes").value("Reviewed By : " + user_name)
-                        .key("Comments").value(status)
-//                        .key("HistoryDate").value(historyDate)
-//                        .key("CreatedDate").value(createdDate)
-                        .key("CreatedBy").value(userId_st)
-                        .endObject()
-                        .endObject();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            Log.d("Json", String.valueOf(userJson));
-
-            StringEntity entity = null;
-            try {
-                entity = new StringEntity(userJson.toString(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-
-            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-            entity.setContentType("application/json");
-
-            request.setEntity(entity);
-
-            // Send request to WCF service
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            try {
-                ResponseHandler<String> responseHandler = new BasicResponseHandler();
-                String response = httpClient.execute(request, responseHandler);
-
-                Log.d("res", response);
-
-                if (response != null) {
-
-                    try {
-
-                        //Get Data from Json
-                        JSONObject jsonObject = new JSONObject(response);
-
-                        String message = jsonObject.getString("NewHistoryResult");
-
-                        //Save userid and username if success
-                        if (message.equals("success")) {
-                            response_json = 200;
-                        } else {
-                            response_json = 201;
-                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            // Dismiss the progress dialog
-            if (pDialog.isShowing())
-                pDialog.dismiss();
-
-            if (response_json == 200) {
-                Toast.makeText(ApprovalDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
-                Intent i = new Intent(ApprovalDetailsActivity.this, ApprovalActivity.class);
-                startActivity(i);
-            } else {
-                Toast.makeText(ApprovalDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+//    private class PostHistory extends AsyncTask<String, Void, Void> {
+//
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//            // Showing progress dialog
+//            pDialog = new ProgressDialog(ApprovalDetailsActivity.this);
+//            pDialog.setMessage("Please wait...");
+//            pDialog.setCancelable(false);
+//            pDialog.show();
+//        }
+//
+//        @Override
+//        protected Void doInBackground(String... params) {
+//
+//            String historyDate = getCurrentTimeStamp();
+//            String status = params[0];
+//            String user_name = pref.GetPreferences("UserName");
+//
+//            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewHistory");
+//            request.setHeader("Accept", "application/json");
+//            request.setHeader("Content-type", "application/json");
+//
+//            JSONStringer userJson = null;
+//            // Build JSON string
+//            try {
+//                userJson = new JSONStringer()
+//                        .object()
+//                        .key("history")
+//                        .object()
+//                        .key("TaskId").value(id)
+//                        .key("IsSubTask").value(1)
+//                        .key("Notes").value("Reviewed By : " + user_name)
+//                        .key("Comments").value(status)
+////                        .key("HistoryDate").value(historyDate)
+////                        .key("CreatedDate").value(createdDate)
+//                        .key("CreatedBy").value(userId_st)
+//                        .endObject()
+//                        .endObject();
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//
+//            Log.d("Json", String.valueOf(userJson));
+//
+//            StringEntity entity = null;
+//            try {
+//                entity = new StringEntity(userJson.toString(), "UTF-8");
+//            } catch (UnsupportedEncodingException e) {
+//                e.printStackTrace();
+//            }
+//
+//            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+//            entity.setContentType("application/json");
+//
+//            request.setEntity(entity);
+//
+//            // Send request to WCF service
+//            DefaultHttpClient httpClient = new DefaultHttpClient();
+//            try {
+//                ResponseHandler<String> responseHandler = new BasicResponseHandler();
+//                String response = httpClient.execute(request, responseHandler);
+//
+//                Log.d("res", response);
+//
+//                if (response != null) {
+//
+//                    try {
+//
+//                        //Get Data from Json
+//                        JSONObject jsonObject = new JSONObject(response);
+//
+//                        String message = jsonObject.getString("NewHistoryResult");
+//
+//                        //Save userid and username if success
+//                        if (message.equals("success")) {
+//                            response_json = 200;
+//                        } else {
+//                            response_json = 201;
+//                        }
+//
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void result) {
+//            super.onPostExecute(result);
+//            // Dismiss the progress dialog
+//            if (pDialog.isShowing())
+//                pDialog.dismiss();
+//
+//            if (response_json == 200) {
+//                Toast.makeText(ApprovalDetailsActivity.this, "Success", Toast.LENGTH_SHORT).show();
+//                Intent i = new Intent(ApprovalDetailsActivity.this, ApprovalActivity.class);
+//                startActivity(i);
+//            } else {
+//                Toast.makeText(ApprovalDetailsActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 
     private class PostNotification extends AsyncTask<String, Void, Void> {
 
@@ -787,6 +787,8 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         protected Void doInBackground(String... params) {
 
             String status = params[0];
+            String username = pref.GetPreferences("UserName");
+            String noti_message = username + " has " + status + " the Task : " + name_st;
 
             HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/NewNotification");
             request.setHeader("Accept", "application/json");
@@ -799,7 +801,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                         .object()
                         .key("notification")
                         .object()
-                        .key("Description").value(status)
+                        .key("Description").value(noti_message)
                         .key("TaskId").value(id)
                         .key("ById").value(userId_st)
                         .key("ToId").value(assignedTo_st)

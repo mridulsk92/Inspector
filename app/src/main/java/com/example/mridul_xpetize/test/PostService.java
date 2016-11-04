@@ -31,10 +31,9 @@ import java.util.Date;
 public class PostService extends Service {
 
     Calendar cur_cal = Calendar.getInstance();
-    String db_details, db_task, db_start, db_end, db_by, db_comments, db_status, db_user, db_sub, db_created;
+    String db_details, db_task, db_start, db_end, db_by, db_comments, db_status, db_user, db_sub, db_created, db_modified;
     String db_desc, db_not_task, db_not_by, db_not_to, db_not_created;
-    String db_task_assigned, db_assigned_to, db_assigned_by, db_comments_assigned, db_created_assigned;
-    int response_json, count, countNot, assignedCount;
+    int response_json, count, countNot;
 
     public PostService() {
     }
@@ -59,34 +58,32 @@ public class PostService extends Service {
         SQLite sql = new SQLite(PostService.this);
         sql.open();
         count = Integer.parseInt(sql.getCount());
-        assignedCount = Integer.parseInt(sql.getCountAssigned());
         sql.close();
         Log.d("Service Count", String.valueOf(count));
-        Log.d("Assigned Count", String.valueOf(assignedCount));
 
         //If post count is zero execute Notification post
         if (count == 0) {
 
             SQLite notC = new SQLite(PostService.this);
             notC.open();
-            countNot = Integer.parseInt(notC.getCount());
+            countNot = Integer.parseInt(notC.getCountNotification());
             notC.close();
             Log.d("Service Count Not", String.valueOf(countNot));
 
-            for (int i = 0; i < countNot; i++) {
-
-                SQLite getNot = new SQLite(PostService.this);
-                getNot.open();
-                String notData[] = getNot.getNotificationRow();
-                db_desc = notData[1];
-                db_not_task = notData[2];
-                db_not_by = notData[3];
-                db_not_to = notData[4];
-                db_not_created = notData[5];
-                getNot.close();
-                new PostNotification().execute();
-
-            }
+//            for (int i = 0; i < countNot; i++) {
+//
+//                SQLite getNot = new SQLite(PostService.this);
+//                getNot.open();
+//                String notData[] = getNot.getNotificationRow();
+//                db_desc = notData[1];
+//                db_not_task = notData[2];
+//                db_not_by = notData[3];
+//                db_not_to = notData[4];
+//                db_not_created = notData[5];
+//                getNot.close();
+//                new PostNotification().execute();
+//
+//            }
         }
         for (int i = 0; i < count; i++) {
 
@@ -98,27 +95,14 @@ public class PostService extends Service {
             db_user = datas[3];
             db_start = datas[4];
             db_end = datas[5];
-            db_by = datas[6];
-            db_status = datas[7];
-            db_sub = datas[8];
-            db_comments = datas[9];
-            db_created = datas[10];
+            db_modified = datas[6];
+            db_by = datas[7];
+            db_status = datas[8];
+            db_sub = datas[9];
+            db_comments = datas[10];
+            db_created = datas[11];
             getData.close();
             new PostTask().execute();
-        }
-
-        for (int i = 0; i < assignedCount; i++) {
-            //AssignedTable
-            SQLite getAssignedData = new SQLite(PostService.this);
-            getAssignedData.open();
-            String data[] = getAssignedData.getFirstRowAssigned();
-            db_task_assigned = data[1];
-            db_assigned_to = data[2];
-            db_assigned_by = data[3];
-            db_comments_assigned = data[6];
-            db_created_assigned = data[7];
-            getAssignedData.close();
-            new PostAssignedTask().execute();
         }
     }
 
@@ -149,6 +133,7 @@ public class PostService extends Service {
                         .key("AssignedToId").value(db_user)
                         .key("StartDateStr").value(db_start)
                         .key("EndDateStr").value(db_end)
+                        .key("ModifiedDateStr").value(db_modified)
                         .key("AssignedById").value(db_by)
                         .key("StatusId").value(db_status)
                         .key("IsSubTask").value(db_sub)
@@ -304,101 +289,11 @@ public class PostService extends Service {
             if (response_json == 200) {
                 Log.d("Not Service", "Success");
                 SQLite del = new SQLite(PostService.this);
-                del.deleteNotificationRow();
+                del.deleteNotificationRows();
                 del.close();
             } else {
                 Log.d("Not Service", "Failed");
 
-            }
-        }
-    }
-
-    private class PostAssignedTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/AssignTask");
-            request.setHeader("Accept", "application/json");
-            request.setHeader("Content-type", "application/json");
-
-            // Build JSON string
-            JSONStringer userJson = null;
-            try {
-                userJson = new JSONStringer()
-                        .object()
-                        .key("taskDetails")
-                        .object()
-                        .key("TaskId").value(db_task_assigned)
-                        .key("AssignedToId").value(db_assigned_to)
-                        .key("AssignedById").value(db_assigned_by)
-                        .key("StatusId").value(1)
-                        .key("IsSubTask").value(1)
-                        .key("Comments").value(db_comments_assigned)
-                        .key("CreatedBy").value(db_created_assigned)
-                        .endObject()
-                        .endObject();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            Log.d("Json", String.valueOf(userJson));
-            StringEntity entity = null;
-            try {
-                entity = new StringEntity(userJson.toString(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-
-            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-            entity.setContentType("application/json");
-
-            request.setEntity(entity);
-
-            // Send request to WCF service
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            try {
-                ResponseHandler<String> responseHandler = new BasicResponseHandler();
-                String response = httpClient.execute(request, responseHandler);
-                Log.d("res", response);
-                if (response != null) {
-
-                    try {
-
-                        //Get Data from Json
-                        JSONObject jsonObject = new JSONObject(response);
-
-                        String message = jsonObject.getString("AssignTaskResult");
-
-                        if (message.equals("success")) {
-                            response_json = 200;
-                        } else {
-                            response_json = 201;
-                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            if (response_json == 200) {
-                Log.d("Assigned Service", "Success");
-                SQLite del = new SQLite(PostService.this);
-                del.open();
-                del.deleteAssignedRow();
-                del.close();
-            } else {
-                Log.d("Assigned Service", "Failed");
             }
         }
     }
@@ -415,4 +310,5 @@ public class PostService extends Service {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
 }

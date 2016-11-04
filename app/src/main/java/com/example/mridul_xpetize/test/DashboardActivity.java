@@ -19,6 +19,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -41,6 +42,7 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -64,6 +66,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -90,10 +93,10 @@ public class DashboardActivity extends AppCompatActivity {
     MenuItem menuItem;
     ListView hidden_not;
     String popUpContents[];
-    CustomAdapter cardAdapter;
     PopupWindow popupWindow;
     SharedPreferences prefNew;
-
+    String db_desc, db_read, db_intent, db_rowId;
+    CardView tasks, operator, approve;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +130,7 @@ public class DashboardActivity extends AppCompatActivity {
                 .addDrawerItems(
                         new SecondaryDrawerItem().withName(R.string.About).withIcon(getResources().getDrawable(R.drawable.ic_about)).withSelectable(false),
                         new PrimaryDrawerItem().withName(getString(R.string.Language)).withIcon(getResources().getDrawable(R.drawable.language_switch_ic)).withIdentifier(3).withSelectable(false),
+                        new PrimaryDrawerItem().withName("Manage Templates").withIcon(getResources().getDrawable(R.drawable.ic_templates)).withIdentifier(4).withSelectable(false),
                         new SecondaryDrawerItem().withName(R.string.LogOut).withIcon(getResources().getDrawable(R.drawable.ic_logout)).withSelectable(false)
                 ).withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -140,6 +144,8 @@ public class DashboardActivity extends AppCompatActivity {
                             } else if (drawerItem.getIdentifier() == 2) {
 
                                 //Clicked LogOut
+                                pref.SavePreferences("IsLoggedIn", "No");
+                                System.exit(0);
 
                             } else if (drawerItem.getIdentifier() == 3) {
 
@@ -187,6 +193,34 @@ public class DashboardActivity extends AppCompatActivity {
 
                                 builder.create();
                                 builder.show();
+                            }else if(drawerItem.getIdentifier() == 4){
+
+                                final android.support.v7.app.AlertDialog.Builder alertDialogBuilder = new android.support.v7.app.AlertDialog.Builder(DashboardActivity.this);
+                                final CharSequence items[] = {"Create Template", "Edit existing Template"};
+                                alertDialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                        if (which == 0) {
+                                            Intent i = new Intent(DashboardActivity.this, CreateSubTaskActivity.class);
+                                            startActivity(i);
+                                        } else {
+                                            new GetSubTaskList().execute("All");
+                                        }
+                                    }
+                                });
+                                alertDialogBuilder.setNegativeButton("Cancel",
+                                        new DialogInterface.OnClickListener() {
+
+                                            @Override
+                                            public void onClick(DialogInterface arg0, int arg1) {
+
+                                            }
+                                        });
+
+                                android.support.v7.app.AlertDialog alertDialog = alertDialogBuilder.create();
+                                alertDialog.show();
+
                             }
                         }
                         return false;
@@ -198,6 +232,9 @@ public class DashboardActivity extends AppCompatActivity {
         result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
 
         //Initialise
+        tasks = (CardView) findViewById(R.id.card_mainTask);
+        operator = (CardView) findViewById(R.id.card_operator);
+        approve = (CardView) findViewById(R.id.card_approve);
         dash_rel = (RelativeLayout) findViewById(R.id.dashboard_layout);
         pref = new PreferencesHelper(DashboardActivity.this);
         hidden_not = (ListView) findViewById(R.id.listView_hidden_notification);
@@ -206,7 +243,7 @@ public class DashboardActivity extends AppCompatActivity {
         workers = (ImageButton) findViewById(R.id.imageButton_workers);
         ImageButton approvedTask = (ImageButton) findViewById(R.id.imageButton_approval);
 
-        //onItemClick of ListView item
+        //Notification List onClick
         hidden_not.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -216,18 +253,18 @@ public class DashboardActivity extends AppCompatActivity {
                     count = 0;
                 }
 
-                menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
+                String rowId = ((TextView) view.findViewById(R.id.rowId_notification)).getText().toString();
+                String intent = ((TextView) view.findViewById(R.id.intent_notification)).getText().toString();
+                String description = ((TextView) view.findViewById(R.id.description_notification)).getText().toString();
 
-                TinyDB tinydb = new TinyDB(DashboardActivity.this);
-                posList.add(position);
-                tinydb.putListInt("Positions", posList);
+                SQLite entry = new SQLite(getApplicationContext());
+                entry.open();
+                entry.updateEntryNotification(rowId, description, "Yes", intent);
+                entry.close();
+
+                menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
                 parent.getChildAt(position - hidden_not.getFirstVisiblePosition()).setBackgroundColor(Color.TRANSPARENT);
-                String desc = ((TextView) view.findViewById(R.id.textview_noti)).getText().toString();
-                String byId = ((TextView) view.findViewById(R.id.noti_by)).getText().toString();
-                Intent i = new Intent(DashboardActivity.this, NotificationActivity.class);
-                i.putExtra("Description", desc);
-                i.putExtra("ById", byId);
-                startActivity(i);
+
             }
         });
 
@@ -245,7 +282,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         //onClick of approvedTask button
-        approvedTask.setOnClickListener(new View.OnClickListener() {
+        approve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -255,7 +292,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         //onClick of myTasks
-        myTasks.setOnClickListener(new View.OnClickListener() {
+        tasks.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -265,7 +302,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         //onClick of workers
-        workers.setOnClickListener(new View.OnClickListener() {
+        operator.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -274,9 +311,225 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
-//        new GetNotiList().execute();
+
+        new GetNotiListServer().execute();
 
         new AddToken().execute();
+    }
+
+    private class GetSubTaskList extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            dataList.clear();
+            popupList.clear();
+//            empty.setVisibility(View.GONE);
+            // Showing progress dialog
+            pDialog = new ProgressDialog(DashboardActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... arg0) {
+
+            String url;
+            String check = arg0[0];
+
+            if (check.equals("User")) {
+
+                HttpPost request = new HttpPost(getString(R.string.url) + "EagleXpetizeService.svc/TaskAssigned");
+                request.setHeader("Accept", "application/json");
+                request.setHeader("Content-type", "application/json");
+
+                // Build JSON string
+                JSONStringer userJson = null;
+                try {
+                    userJson = new JSONStringer()
+                            .object()
+                            .key("taskDetails")
+                            .object()
+                            .key("TaskDetailsId").value(0)
+                            .key("TaskId").value(0)
+                            .key("AssignedToId").value(0)
+                            .key("AssignedById").value(0)
+                            .key("IsSubTask").value(1)
+                            .key("StatusId").value(1)
+                            .endObject()
+                            .endObject();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                Log.d("Json", String.valueOf(userJson));
+                StringEntity entity = null;
+                try {
+                    entity = new StringEntity(userJson.toString(), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                entity.setContentType("application/json");
+
+                request.setEntity(entity);
+
+                // Send request to WCF service
+                DefaultHttpClient httpClient = new DefaultHttpClient();
+                try {
+                    ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                    String response = httpClient.execute(request, responseHandler);
+                    Log.d("res", response);
+
+                    if (response != null) {
+
+                        try {
+
+                            JSONObject json1 = new JSONObject(response);
+                            JSONArray tasks = json1.getJSONArray("TaskAssignedResult");
+
+                            // Looping through Array
+                            for (int i = 0; i < tasks.length(); i++) {
+                                JSONObject c = tasks.getJSONObject(i);
+
+                                String id = c.getString("TaskId");
+                                String name = c.getString("TaskName");
+                                String desc = c.getString("TaskDescription");
+                                String comments = c.getString("Comments");
+                                String isSub = c.getString("IsSubTask");
+                                String status = c.getString("Status");
+                                String createdBy = c.getString("CreatedBy");
+                                int statusId = c.getInt("StatusId");
+                                String assignedBy = c.getString("AssignedByName");
+
+                                //adding each child node to HashMap key => value
+                                HashMap<String, Object> taskMap = new HashMap<String, Object>();
+                                taskMap.put("TaskDescription", desc);
+                                taskMap.put("CreatedBy", createdBy);
+                                taskMap.put("TaskId", id);
+                                taskMap.put("TaskName", name);
+                                taskMap.put("IsSub", isSub);
+                                taskMap.put("AssignedByName", assignedBy);
+                                taskMap.put("StatusId", statusId);
+                                taskMap.put("Comments", comments);
+                                taskMap.put("Status", status);
+
+                                dataList.add(taskMap);
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e("ServiceHandler", "Couldn't get any data from the url");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+
+                // Creating service handler class instance
+                ServiceHandler sh = new ServiceHandler();
+                url = getString(R.string.url) + "EagleXpetizeService.svc/SubTasks/0/0/0/1/1";
+                Log.d("Url", url);
+
+                // Making a request to url and getting response
+                String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+                Log.d("Response: ", "> " + jsonStr);
+
+                if (jsonStr != null) {
+                    try {
+
+                        JSONArray tasks = new JSONArray(jsonStr);
+
+                        // looping through All Contacts
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject c = tasks.getJSONObject(i);
+
+                            String id = c.getString("TaskId");
+                            String createdBy = c.getString("CreatedBy");
+                            String name = c.getString("SubTaskName");
+                            String desc = c.getString("Description");
+                            String comments = c.getString("Comments");
+                            String statusId = c.getString("StatusId");
+                            String priority = c.getString("Priority");
+                            String subId = c.getString("SubTaskId");
+
+                            //tmp hashmap for single contact
+                            HashMap<String, Object> taskMap = new HashMap<String, Object>();
+
+                            //adding each child node to HashMap key => value
+                            taskMap.put("TaskId", id);
+                            taskMap.put("CreatedBy", createdBy);
+                            taskMap.put("SubTaskName", name);
+                            taskMap.put("Description", desc);
+                            taskMap.put("StatusId", statusId);
+                            taskMap.put("Comments", comments);
+                            taskMap.put("SubTaskId", subId);
+                            taskMap.put("Priority", priority);
+                            popupList.add(name);
+                            dataList.add(taskMap);
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("ServiceHandler", "Couldn't get any data from the url");
+                }
+            }
+
+            return check;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            super.onPostExecute(result);
+            // Dismiss the progress dialog
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+
+            if (result.equals("User")) {
+//                cardAdapter = new CustomAdapter(WorkerActivity.this, R.layout.task_list, dataList);
+//                added_list.setAdapter(cardAdapter);
+            } else {
+                CharSequence[] items = popupList.toArray(new CharSequence[popupList.size()]);
+                android.app.AlertDialog.Builder builderSingle = new android.app.AlertDialog.Builder(DashboardActivity.this);
+                builderSingle.setTitle("Select A Template");
+
+                builderSingle.setNegativeButton(
+                        "Cancel",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                builderSingle.setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String id = dataList.get(which).get("SubTaskId").toString();
+                        String name_st = dataList.get(which).get("SubTaskName").toString();
+                        String comments = dataList.get(which).get("Comments").toString();
+                        String description = dataList.get(which).get("Description").toString();
+                        String createdBy = dataList.get(which).get("CreatedBy").toString();
+                        Intent i = new Intent(DashboardActivity.this, ManageTemplateActivity.class);
+                        i.putExtra("Id", id);
+                        i.putExtra("Name", name_st);
+                        i.putExtra("Description", description);
+                        i.putExtra("Comments", comments);
+                        i.putExtra("CreatedBy", createdBy);
+                        startActivity(i);
+                    }
+                });
+                builderSingle.show();
+            }
+        }
     }
 
     private class AddToken extends AsyncTask<Void, Void, Void> {
@@ -354,6 +607,166 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
 
+    private class GetNotiListServer extends AsyncTask<Void, Void, Void> {
+
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//
+//            dataList.clear();
+//            // Showing progress dialog
+//            pDialog = new ProgressDialog(MainActivity.this);
+//            pDialog.setMessage("Please wait...");
+//            pDialog.setCancelable(true);
+//            pDialog.show();
+//        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            String user_id = pref.GetPreferences("UserId");
+
+            // Creating service handler class instance
+            ServiceHandler sh = new ServiceHandler();
+            String url = getString(R.string.url) + "EagleXpetizeService.svc/Notifications/" + user_id + "/1";
+            // Making a request to url and getting response
+            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
+            Log.d("Url", url);
+            Log.d("Response: ", "> " + jsonStr);
+            if (jsonStr != null) {
+
+                try {
+
+                    SQLite del = new SQLite(getApplicationContext());
+                    del.open();
+                    del.deleteNotificationRows();
+                    del.close();
+
+                    JSONArray tasks = new JSONArray(jsonStr);
+
+                    for (int i = 0; i < tasks.length(); i++) {
+                        JSONObject c = tasks.getJSONObject(i);
+
+                        String id = c.getString("TaskId");
+                        String taskName = c.getString("TaskName");
+                        String username = c.getString("UserName");
+                        String description = c.getString("Description");
+                        String byId = c.getString("ById");
+                        String toId = c.getString("ToId");
+                        String isNew = c.getString("IsNew");
+
+                        String read = "No";
+                        String intentData = "Test";
+                        SQLite entry = new SQLite(getApplicationContext());
+                        entry.open();
+                        entry.createEntryNotification(description, read, intentData);
+                        String not_count = entry.getCountNotification();
+                        Log.d("NotCountFcm :", not_count);
+                        entry.close();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.e("ServiceHandler", "Couldn't get any data from the url");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+//            if (pDialog.isShowing())
+//                pDialog.dismiss();
+
+            new GetNotiListLocal().execute();
+
+        }
+    }
+
+    private class GetNotiListLocal extends AsyncTask<Void, Void, Void> {
+
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//
+//            // Showing progress dialog
+//            pDialog = new ProgressDialog(MainActivity.this);
+//            pDialog.setMessage(getString(R.string.pDialog_wait));
+//            pDialog.setCancelable(true);
+//            pDialog.show();
+//        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            SQLite notC = new SQLite(DashboardActivity.this);
+            notC.open();
+            int countNot = Integer.parseInt(notC.getCountNotification());
+            notC.close();
+            Log.d("Service Count Not", String.valueOf(countNot));
+
+            if (countNot != 0) {
+                int i = 0;
+                int counter;
+                if (countNot < 5) {
+                    counter = countNot;
+                } else {
+                    counter = 5;
+                }
+                while (i < counter) {
+
+                    SQLite getNot = new SQLite(DashboardActivity.this);
+                    getNot.open();
+                    String notData[][] = getNot.getNotification();
+                    db_rowId = notData[i][0];
+                    db_desc = notData[i][1];
+                    db_read = notData[i][2];
+                    db_intent = notData[i][3];
+                    getNot.close();
+                    Log.d("Test DEsc", db_desc + db_intent + db_read);
+
+                    HashMap<String, Object> taskMap = new HashMap<String, Object>();
+                    taskMap.put("RowId", db_rowId);
+                    taskMap.put("Description", db_desc);
+                    taskMap.put("Read", db_read);
+                    taskMap.put("Intent", db_intent);
+                    dataList.add(taskMap);
+                    i++;
+
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+//            if (pDialog.isShowing())
+//                pDialog.dismiss();
+
+            // initialize pop up window
+            for (int i = 0; i < dataList.size(); i++) {
+                if (dataList.get(i).get("Read").equals("No")) {
+                    count++;
+                }
+            }
+//            count = notiList.size();
+            CustomAdapterNot notAdapter = new CustomAdapterNot(DashboardActivity.this, R.layout.notification_layout, dataList);
+            hidden_not.setAdapter(notAdapter);
+            menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
+
+        }
+    }
+
+//    private static boolean doesDatabaseExist(Context context, String dbName) {
+//        File dbFile = context.getDatabasePath(dbName);
+//        return dbFile.exists();
+//    }
+
     //Alert Dialog
     public void dialogBox() {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -385,9 +798,9 @@ public class DashboardActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private class CustomAdapter extends ArrayAdapter<HashMap<String, Object>> {
+    private class CustomAdapterNot extends ArrayAdapter<HashMap<String, Object>> {
 
-        public CustomAdapter(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
+        public CustomAdapterNot(Context context, int textViewResourceId, ArrayList<HashMap<String, Object>> Strings) {
 
             //let android do the initializing :)
             super(context, textViewResourceId, Strings);
@@ -396,7 +809,7 @@ public class DashboardActivity extends AppCompatActivity {
         //class for caching the views in a row
         private class ViewHolder {
 
-            TextView not, isRead, byName, taskName;
+            TextView desc, intent, read, rowId;
             LinearLayout noti_linear;
         }
 
@@ -413,176 +826,40 @@ public class DashboardActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
 
                 //cache the views
-                viewHolder.taskName = (TextView) convertView.findViewById(R.id.noti_task);
-                viewHolder.byName = (TextView) convertView.findViewById(R.id.noti_by);
+                viewHolder.rowId = (TextView) convertView.findViewById(R.id.rowId_notification);
+                viewHolder.desc = (TextView) convertView.findViewById(R.id.description_notification);
                 viewHolder.noti_linear = (LinearLayout) convertView.findViewById(R.id.not_layout);
-                viewHolder.not = (TextView) convertView.findViewById(R.id.textview_noti);
-                viewHolder.isRead = (TextView) convertView.findViewById(R.id.textview_isRead);
+                viewHolder.intent = (TextView) convertView.findViewById(R.id.intent_notification);
+                viewHolder.read = (TextView) convertView.findViewById(R.id.read_notification);
 
-                //link the cached views to the convertview
+                //link the cached views to the convertView
                 convertView.setTag(viewHolder);
             } else
                 viewHolder = (ViewHolder) convertView.getTag();
 
             //set the data to be displayed
-            viewHolder.byName.setText(dataList.get(position).get("UserName").toString());
-            viewHolder.taskName.setText(dataList.get(position).get("TaskName").toString());
-            viewHolder.not.setText(dataList.get(position).get("Description").toString());
+            viewHolder.rowId.setText(dataList.get(position).get("RowId").toString());
+            viewHolder.read.setText(dataList.get(position).get("Read").toString());
+            viewHolder.intent.setText(dataList.get(position).get("Intent").toString());
+            viewHolder.desc.setText(dataList.get(position).get("Description").toString());
             viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
 
-            for (int i = 0; i < posList.size(); i++) {
-                Log.d("Test Custom", String.valueOf(posList.get(i)));
-                if (position == posList.get(i)) {
-                    viewHolder.noti_linear.setBackgroundColor(Color.TRANSPARENT);
-                } else {
-                    viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
-                }
+            if (viewHolder.read.getText().equals("No")) {
+                viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
+            } else {
+                viewHolder.noti_linear.setBackgroundColor(Color.TRANSPARENT);
             }
+//            for (int i = 0; i < savedList.size(); i++) {
+//                Log.d("Test Custom", String.valueOf(savedList.get(i)));
+//                if (position == savedList.get(i)) {
+//                    viewHolder.noti_linear.setBackgroundColor(Color.TRANSPARENT);
+//                } else {
+//                    viewHolder.noti_linear.setBackgroundColor(Color.LTGRAY);
+//                }
+//            }
 
             return convertView;
         }
-    }
-
-    private class GetNotiList extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            dataList.clear();
-            // Showing progress dialog
-            pDialog = new ProgressDialog(DashboardActivity.this);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            String user_id = pref.GetPreferences("UserId");
-
-            // Creating service handler class instance
-            ServiceHandler sh = new ServiceHandler();
-            String url = getString(R.string.url) + "EagleXpetizeService.svc/Notifications/" + user_id + "/1";
-            // Making a request to url and getting response
-            String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
-            Log.d("Url", url);
-            Log.d("Response: ", "> " + jsonStr);
-            if (jsonStr != null) {
-
-                try {
-
-                    JSONArray tasks = new JSONArray(jsonStr);
-
-                    for (int i = 0; i < tasks.length(); i++) {
-                        JSONObject c = tasks.getJSONObject(i);
-
-                        String id = c.getString("TaskId");
-                        String taskName = c.getString("TaskName");
-                        String username = c.getString("UserName");
-                        String description = c.getString("Description");
-                        String byId = c.getString("ById");
-                        String toId = c.getString("ToId");
-                        String isNew = c.getString("IsNew");
-
-                        // adding each child node to HashMap key => value
-                        HashMap<String, Object> taskMap = new HashMap<String, Object>();
-                        taskMap.put("TaskId", id);
-                        taskMap.put("TaskName", taskName);
-                        taskMap.put("UserName", username);
-                        taskMap.put("Description", description);
-                        taskMap.put("ById", byId);
-                        taskMap.put("ToId", toId);
-                        taskMap.put("IsNew", isNew);
-                        dataList.add(taskMap);
-                        popupList.add(description);
-                        nameList.add(description);
-
-                    }
-                    count = dataList.size();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                Log.e("ServiceHandler", "Couldn't get any data from the url");
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            if (pDialog.isShowing())
-                pDialog.dismiss();
-
-            TinyDB db = new TinyDB(DashboardActivity.this);
-            db.putListString("Description", nameList);
-            // initialize pop up window
-//            popupWindow = popupWindow();
-
-
-//            LayoutInflater factory = LayoutInflater.from(DashboardActivity.this);
-//            final View addView = factory.inflate(
-//                    R.layout.popup_layout, null);
-//            final android.app.AlertDialog addDialog = new android.app.AlertDialog.Builder(DashboardActivity.this).create();
-//            addDialog.setView(addView);
-
-
-            cardAdapter = new CustomAdapter(DashboardActivity.this, R.layout.popup_layout, dataList);
-//            ListView notificationList = (ListView) addView.findViewById(R.id.listView_noti);
-//            notificationList.setAdapter(cardAdapter);
-            hidden_not.setAdapter(cardAdapter);
-
-//            notificationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                @Override
-//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//
-//                    count--;
-//                    if (count <= 0) {
-//                        count = 0;
-//                    }
-//
-//                    TinyDB tinydb = new TinyDB(DashboardActivity.this);
-//                    menuItem.setIcon(buildCounterDrawable(count, R.drawable.blue_bell_small));
-//                    posList.add(position);
-//                    tinydb.putListInt("Positions", posList);
-////                    parent.getChildAt(position).setBackgroundColor(Color.TRANSPARENT);
-//                    String desc = ((TextView) view.findViewById(R.id.textview_noti)).getText().toString();
-//                    String byId = ((TextView) view.findViewById(R.id.noti_by)).getText().toString();
-//                    Intent i = new Intent(DashboardActivity.this, NotificationActivity.class);
-//                    i.putExtra("Description", desc);
-//                    i.putExtra("ById", byId);
-//                    startActivity(i);
-//                }
-//            });
-
-//            addDialog.show();
-        }
-    }
-
-    public PopupWindow popupWindow() {
-
-        // initialize a pop up window type
-        PopupWindow popupWindow = new PopupWindow(this);
-
-        // the drop down list is a list view
-        ListView listViewDogs = new ListView(this);
-
-        // set our adapter and pass our pop up window contents
-        listViewDogs.setAdapter(cardAdapter);
-
-        // some other visual settings
-        popupWindow.setFocusable(true);
-        popupWindow.setWidth(250);
-        popupWindow.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-
-        // set the list view as pop up window content
-        popupWindow.setContentView(listViewDogs);
-
-        return popupWindow;
     }
 
     private Drawable buildCounterDrawable(int count, int backgroundImageId) {

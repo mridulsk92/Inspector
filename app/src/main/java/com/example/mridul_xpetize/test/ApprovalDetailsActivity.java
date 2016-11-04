@@ -128,6 +128,8 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                             } else if (drawerItem.getIdentifier() == 2) {
 
                                 //Clicked LogOut
+                                pref.SavePreferences("IsLoggedIn","No");
+                                System.exit(0);
 
                             } else if (drawerItem.getIdentifier() == 3) {
 
@@ -158,7 +160,6 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                                                 }
                                             }
                                         })
-
                                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int id) {
@@ -246,8 +247,7 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         //Load pic
         String url = "http://vikray.in/NImage/SubTask" + id + ".jpg";
         Log.d("URL Image", url);
-        Picasso.
-                with(ApprovalDetailsActivity.this).
+        Picasso.with(ApprovalDetailsActivity.this).
                 load(url).
                 into(decodedImg);
 
@@ -370,16 +370,16 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                     new PostTask().execute("Reject");
                 } else {
                     Toast.makeText(ApprovalDetailsActivity.this, "No Internet Connection. Data stored locally", Toast.LENGTH_SHORT).show();
-                    SQLite entry = new SQLite(ApprovalDetailsActivity.this);
-                    entry.open();
-                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "6", "1", comments_updated, createdBy);
-                    entry.createEntryNotification("Rejected", id, userId_st, assignedTo_st, userId_st);
-                    entry.createEntryAssigned(id, assignedTo_st, assignedBy, "1", "1", comments_updated, createdBy);
-                    String c = entry.getCount();
-                    String n = entry.getCountNotification();
-                    String a = entry.getCountAssigned();
-                    entry.close();
-                    Log.d("Count", "Task :" + c + "Notification :" + n + "Assigned :" + a);
+//                    SQLite entry = new SQLite(ApprovalDetailsActivity.this);
+//                    entry.open();
+//                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "6", "1", comments_updated, createdBy);
+//                    entry.createEntryNotification("Rejected", id, userId_st, assignedTo_st, userId_st);
+//                    entry.createEntryAssigned(id, assignedTo_st, assignedBy, "1", "1", comments_updated, createdBy);
+//                    String c = entry.getCount();
+//                    String n = entry.getCountNotification();
+//                    String a = entry.getCountAssigned();
+//                    entry.close();
+//                    Log.d("Count", "Task :" + c + "Notification :" + n + "Assigned :" + a);
                 }
             }
         });
@@ -414,14 +414,14 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
                     new PostTask().execute(condition);
                 } else {
                     Toast.makeText(ApprovalDetailsActivity.this, "No Internet connection. Data stored locally", Toast.LENGTH_SHORT).show();
-                    SQLite entry = new SQLite(ApprovalDetailsActivity.this);
-                    entry.open();
-                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "7", "1", comments_updated, createdBy);
-                    entry.createEntryNotification("Approved", id, userId_st, assignedTo_st, userId_st);
-                    String c = entry.getCount();
-                    String n = entry.getCountNotification();
-                    entry.close();
-                    Log.d("Count", "Task :" + c + "Notification :" + n);
+//                    SQLite entry = new SQLite(ApprovalDetailsActivity.this);
+//                    entry.open();
+//                    entry.createEntry(detail_id, id, assignedTo_st, tempStart, tempEnd, currentTime, assignedBy, "7", "1", comments_updated, createdBy);
+//                    entry.createEntryNotification("Approved", id, userId_st, assignedTo_st, userId_st);
+//                    String c = entry.getCount();
+//                    String n = entry.getCountNotification();
+//                    entry.close();
+//                    Log.d("Count", "Task :" + c + "Notification :" + n);
                 }
             }
         });
@@ -1040,4 +1040,5 @@ public class ApprovalDetailsActivity extends AppCompatActivity {
         Intent i = new Intent(ApprovalDetailsActivity.this, ApprovalDetailsActivity.class);
         startActivity(i);
     }
+
 }

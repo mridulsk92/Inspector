@@ -8,6 +8,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="lbl_recording">Recording...</string>
     <string name="pDialog_wait">Please Wait..</string>
+    <string name="DownloadComplete">Download Completed</string>
 
     <string name="username">Username</string>
     <string name="About">About</string>

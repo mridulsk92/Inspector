@@ -166,8 +166,8 @@ public class NotificationActivity extends AppCompatActivity {
 
                 //cache the views
                 viewHolder.noti_linear = (LinearLayout) convertView.findViewById(R.id.not_layout);
-                viewHolder.not = (TextView) convertView.findViewById(R.id.textview_noti);
-                viewHolder.isRead = (TextView) convertView.findViewById(R.id.textview_isRead);
+//                viewHolder.not = (TextView) convertView.findViewById(R.id.textview_noti);
+//                viewHolder.isRead = (TextView) convertView.findViewById(R.id.textview_isRead);
 
                 //link the cached views to the convertview
                 convertView.setTag(viewHolder);

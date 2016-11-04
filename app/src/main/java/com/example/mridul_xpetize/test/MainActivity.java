@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     String insp_id;
 
     String user_id;
+
     private Drawer result = null;
 
     ListView task_list;
@@ -150,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
                             } else if (drawerItem.getIdentifier() == 2) {
 
                                 //Clicked LogOut
+                                pref.SavePreferences("IsLoggedIn","No");
+                                System.exit(0);
 
                             } else if (drawerItem.getIdentifier() == 3) {
 
@@ -394,7 +397,6 @@ public class MainActivity extends AppCompatActivity {
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // attaching data adapter to spinner
         typeSpinner.setAdapter(dataAdapter);
-
         addDialog.show();
     }
 
@@ -413,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected ArrayList<String> doInBackground(ArrayList<String>... params) {
 
-            ArrayList<String> passed = params[0]; //get passed arraylist
+            ArrayList<String> passed = params[0]; //get passed arrayList
             String taskid_st = passed.get(0);
             String userId_st = passed.get(1);
             String createdBy_st = passed.get(2);
@@ -487,6 +489,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             // Showing progress dialog
+
             pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
@@ -496,8 +499,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected ArrayList<String> doInBackground(ArrayList<String>... passing) {
 
-
-            ArrayList<String> passed = passing[0]; //get passed arraylist
+            //get passed arrayList
+            ArrayList<String> passed = passing[0];
             String desc = passed.get(0);
             String name = passed.get(1);
             String loc = passed.get(2);
@@ -508,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
             request.setHeader("Accept", "application/json");
             request.setHeader("Content-type", "application/json");
 
-            // Build JSON string
+            //Build JSON string
             JSONStringer userJson = null;
             try {
                 userJson = new JSONStringer()

@@ -163,6 +163,7 @@ public class AttachmentDetailsActivity extends AppCompatActivity {
 
                             editDialog.show();
                         } else {
+
                             itemArrayList.remove(position);
                             dataList.remove(position);
                             checkAdapter = new CustomAdapter(AttachmentDetailsActivity.this, R.layout.checklist, dataList);
@@ -171,6 +172,7 @@ public class AttachmentDetailsActivity extends AppCompatActivity {
                         }
                     }
                 });
+
                 alertDialogBuilder.setNegativeButton("Cancel",
                         new DialogInterface.OnClickListener() {
 
@@ -601,6 +603,7 @@ public class AttachmentDetailsActivity extends AppCompatActivity {
                         taskMap.put("ItemListString", item);
                         dataList.add(taskMap);
                         itemArrayList.add(item);
+
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -632,4 +635,5 @@ public class AttachmentDetailsActivity extends AppCompatActivity {
             }
         }
     }
+
 }
